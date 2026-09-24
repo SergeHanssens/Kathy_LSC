@@ -1,0 +1,63 @@
+/* Overzichtspagina. Bewust zonder CSS-variabelen en zonder flex-gap,
+   zodat ook oudere tablets en telefoons de pagina juist tonen. */
+
+* { -webkit-box-sizing: border-box; box-sizing: border-box; }
+body {
+  margin: 0;
+  background: #132029;
+  color: #eef5f9;
+  font-family: Verdana, Tahoma, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  line-height: 1.55;
+  -webkit-text-size-adjust: 100%;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+header, main, footer { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+header { padding-top: 34px; padding-bottom: 8px; }
+header h1 { font-size: 30px; margin: 0 0 6px; letter-spacing: .01em; }
+header p { color: #9ab2c1; font-size: 15px; margin: 0 0 6px; max-width: 62ch; }
+
+h2 { font-size: 17px; margin: 34px 0 12px; padding-bottom: 6px;
+     border-bottom: 2px solid #3c5a6d; }
+
+/* ---- tools ---- */
+.kaarten { display: -webkit-box; display: -webkit-flex; display: flex;
+           -webkit-flex-wrap: wrap; flex-wrap: wrap; margin: 0 -8px; }
+.kaart {
+  display: block; text-decoration: none; color: inherit;
+  background: #1d2f3c; border: 2px solid #3c5a6d; border-radius: 14px;
+  padding: 18px 20px 16px; position: relative; overflow: hidden;
+  -webkit-flex: 1 1 320px; flex: 1 1 320px;
+  margin: 0 8px 16px;
+}
+.kaart:hover { border-color: #ffe24e; }
+.kaart .vlag { position: absolute; left: 0; top: 0; bottom: 0; width: 8px; }
+.kaart h3 { margin: 0 0 6px 6px; font-size: 18px; }
+.kaart p { margin: 0 0 10px 6px; font-size: 14px; color: #c7d7e2; }
+.kaart .meta { font-size: 12px; color: #8ba4b4; margin-left: 6px; }
+
+/* ---- materiaal ---- */
+.lijst { list-style: none; margin: 0; padding: 0; }
+.lijst li { border-bottom: 1px solid #27404f; padding: 12px 0; }
+.lijst li:last-child { border-bottom: none; }
+.lijst a { color: #ffe24e; font-weight: bold; font-size: 15px; text-decoration: none; }
+.lijst a:hover { text-decoration: underline; }
+.lijst span { display: block; font-size: 13.5px; color: #9ab2c1; margin-top: 3px; }
+
+/* ---- kleurenlegende ---- */
+.kleuren { display: -webkit-box; display: -webkit-flex; display: flex;
+           -webkit-flex-wrap: wrap; flex-wrap: wrap; }
+.kleuren span { font-size: 13px; color: #9ab2c1; margin: 0 16px 8px 0; white-space: nowrap; }
+.kleuren i { display: inline-block; width: 22px; height: 14px; border-radius: 3px;
+             border: 2px solid #14222c; vertical-align: -2px; margin-right: 7px; }
+
+footer { padding-top: 10px; padding-bottom: 40px; }
+footer p { font-size: 13px; color: #8ba4b4; border-top: 1px solid #27404f;
+           padding-top: 14px; max-width: 70ch; }
+
+@media (max-width: 640px) {
+  header { padding-top: 24px; }
+  header h1 { font-size: 24px; }
+  .kaart { -webkit-flex: 1 1 100%; flex: 1 1 100%; }
+}

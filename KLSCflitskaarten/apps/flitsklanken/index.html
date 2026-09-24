@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Flitsklanken — Taal in Blokjes</title>
+<style>
+* { -webkit-box-sizing: border-box; box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: #132029; color: #eef5f9;
+  font-family: Verdana, Tahoma, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  display: -webkit-box; display: -webkit-flex; display: flex;
+  -webkit-box-orient: vertical; -webkit-flex-direction: column; flex-direction: column;
+  overflow: hidden;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  -webkit-user-select: none; user-select: none;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+button { font: inherit; cursor: pointer; -webkit-appearance: none; appearance: none;
+         touch-action: manipulation; }
+
+/* ---------- balk ---------- */
+#balk {
+  display: -webkit-box; display: -webkit-flex; display: flex;
+  -webkit-flex-wrap: wrap; flex-wrap: wrap;
+  -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+  padding: 8px 10px 4px; background: #1d2f3c; border-bottom: 2px solid #3c5a6d;
+}
+#balk > * { margin: 0 6px 4px 0; }
+.knop {
+  background: #27404f; color: #eef5f9; border: 2px solid #3c5a6d;
+  border-radius: 10px; padding: 9px 13px; font-size: 14px; font-weight: bold;
+}
+.knop.aan { background: #ffe24e; color: #14222c; border-color: #ffe24e; }
+select {
+  background: #27404f; color: #eef5f9; border: 2px solid #3c5a6d;
+  border-radius: 10px; padding: 8px 9px; font-size: 14px; font-weight: bold;
+  max-width: 46vw;
+}
+input[type=range] { width: 110px; vertical-align: middle; }
+.lbl { font-size: 12px; color: #9ab2c1; font-weight: bold; }
+.rek { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; }
+#teller { font-size: 14px; color: #9ab2c1; font-weight: bold; }
+
+/* ---------- podium ---------- */
+#podium {
+  -webkit-box-flex: 1; -webkit-flex: 1; flex: 1;
+  display: -webkit-box; display: -webkit-flex; display: flex;
+  -webkit-box-orient: vertical; -webkit-flex-direction: column; flex-direction: column;
+  -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+  -webkit-box-pack: center; -webkit-justify-content: center; justify-content: center;
+  cursor: pointer; padding: 2vh 3vw; position: relative; overflow: hidden;
+}
+#blokwrap { display: -webkit-box; display: -webkit-flex; display: flex;
+  -webkit-box-orient: vertical; -webkit-flex-direction: column; flex-direction: column;
+  -webkit-box-align: center; -webkit-align-items: center; align-items: center; }
+#blok {
+  display: -webkit-box; display: -webkit-flex; display: flex;
+  position: relative; border: 0.6vh solid #14222c; border-radius: 1.4vh;
+  background: #8fa3b0;
+  -webkit-box-shadow: 0 0 0 1vh rgba(255,255,255,.5), 0 1.4vh 3.4vh rgba(0,0,0,.28);
+  box-shadow: 0 0 0 1vh rgba(255,255,255,.5), 0 1.4vh 3.4vh rgba(0,0,0,.28);
+}
+#blok:after {
+  content: ""; position: absolute; right: -3.2vh; top: 50%;
+  margin-top: -3.5vh; width: 3.2vh; height: 7vh; background: inherit;
+  border: 0.6vh solid #14222c; border-left: none; border-radius: 0 1.2vh 1.2vh 0;
+}
+#blok .cel {
+  min-width: 12vh; height: 22vh;
+  display: -webkit-box; display: -webkit-flex; display: flex;
+  -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+  -webkit-box-pack: center; -webkit-justify-content: center; justify-content: center;
+  font-size: 13vh; font-weight: bold; color: #14222c; line-height: 1; padding: 0 1vh;
+  border-right: 0.25vh solid rgba(20,34,44,.22);
+}
+#blok .cel.laatste { border-right: none; }
+
+#blok.letters { background: transparent; border: none;
+  -webkit-box-shadow: none; box-shadow: none; }
+#blok.letters:after { display: none; }
+#blok.letters .cel { border-right: none; min-width: 0; padding: 0 1.4vh;
+  font-size: 20vh; height: 25vh; text-shadow: 0 0.5vh 1.6vh rgba(0,0,0,.45); }
+
+#streep { height: 1.2vh; border-top: 0.4vh solid #14222c;
+          border-bottom: 0.4vh solid #14222c; margin-top: 1.4vh; width: 100%; }
+#stippen { display: -webkit-box; display: -webkit-flex; display: flex;
+  -webkit-box-pack: justify; -webkit-justify-content: space-around; justify-content: space-around;
+  width: 100%; margin-top: 0.6vh; font-size: 5vh; line-height: .4; color: #14222c; }
+#soort { font-size: 3.2vh; font-weight: bold; min-height: 4.2vh; margin-top: 2vh; }
+#steun { font-size: 2.6vh; opacity: .72; min-height: 3.4vh; }
+#hint { font-size: 2vh; opacity: .55; position: absolute; left: 0; right: 0;
+        bottom: 1.4vh; text-align: center; }
+#leeg { font-size: 2.6vh; opacity: .75; text-align: center; max-width: 60ch; line-height: 1.5; }
+
+/* ---------- kleurenbalk ---------- */
+#kleurbalk {
+  display: -webkit-box; display: -webkit-flex; display: flex;
+  -webkit-flex-wrap: wrap; flex-wrap: wrap;
+  -webkit-box-pack: center; -webkit-justify-content: center; justify-content: center;
+  padding: 8px 10px 4px; background: #1d2f3c; border-top: 2px solid #3c5a6d;
+}
+#kleurbalk span { font-size: 12px; color: #9ab2c1; font-weight: bold;
+  margin: 0 10px 4px 0; white-space: nowrap; }
+#kleurbalk i { display: inline-block; width: 20px; height: 13px; border-radius: 3px;
+  border: 2px solid #14222c; vertical-align: -2px; margin-right: 5px; }
+
+/* ---------- keuzepaneel ---------- */
+#paneel {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: #132029; z-index: 10; padding: 16px 18px;
+  overflow-y: auto; -webkit-overflow-scrolling: touch; display: none;
+}
+#paneel.open { display: block; }
+#paneel h2 { font-size: 17px; margin: 0 0 4px; }
+#paneel p { font-size: 13px; color: #9ab2c1; margin: 0 0 14px; max-width: 70ch; }
+.groep { margin-bottom: 14px; }
+.groep h3 { font-size: 13px; color: #9ab2c1; margin: 0 0 6px; }
+.mini { display: -webkit-box; display: -webkit-flex; display: flex;
+        -webkit-flex-wrap: wrap; flex-wrap: wrap; }
+.mini button {
+  border: 3px solid transparent; border-radius: 8px; padding: 9px 12px;
+  font-size: 18px; font-weight: bold; color: #14222c; opacity: .35;
+  min-width: 56px; margin: 0 7px 7px 0;
+}
+.mini button.aan { opacity: 1; border-color: #eef5f9; }
+#paneelknoppen { margin-top: 6px; }
+#paneelknoppen .knop { margin-right: 8px; }
+
+#menu { display: none; }
+#instel { display: -webkit-box; display: -webkit-flex; display: flex;
+  -webkit-flex-wrap: wrap; flex-wrap: wrap;
+  -webkit-box-align: center; -webkit-align-items: center; align-items: center; }
+#instel > * { margin: 0 6px 4px 0; }
+
+/* Smalle schermen: telefoon en tablet rechtop.
+   De instellingen zitten achter één knop, zodat de klank alle ruimte krijgt. */
+@media (max-width: 860px) {
+  #menu { display: inline-block; }
+  #instel { display: none; width: 100%; padding-top: 6px; }
+  body.instel-open #instel { display: -webkit-box; display: -webkit-flex; display: flex; }
+  #balk { padding: 6px 8px 2px; }
+  .knop { padding: 8px 10px; font-size: 13px; }
+  select { font-size: 13px; max-width: 70vw; }
+  #blok .cel { min-width: 15vw; height: 14vh; font-size: 8.5vh; padding: 0 1vw; }
+  #blok.letters .cel { font-size: 16vw; height: auto; padding: 0 1.2vw; }
+  #soort { font-size: 4.4vw; min-height: 6vw; margin-top: 3vw; }
+  #steun { font-size: 3.6vw; min-height: 5vw; }
+  #hint { font-size: 3vw; bottom: 0.6vh; }
+  #leeg { font-size: 4vw; }
+  #kleurbalk { padding: 6px 8px 2px; }
+  #kleurbalk span { font-size: 10px; margin: 0 7px 3px 0; }
+  #kleurbalk i { width: 15px; height: 10px; }
+  #teller { font-size: 12px; }
+}
+
+/* Telefoon in liggende stand: weinig hoogte, veel breedte. */
+@media (max-width: 920px) and (orientation: landscape) {
+  #blok.letters .cel { font-size: 24vh; }
+  #blok .cel { height: 20vh; font-size: 11vh; min-width: 11vh; }
+  #soort { font-size: 3.4vh; min-height: 4vh; margin-top: 1vh; }
+  #steun { font-size: 2.8vh; min-height: 3vh; }
+  #kleurbalk { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div id="balk">
+  <button class="knop" id="menu">&#9881; Instellingen</button>
+  <div id="instel">
+  <button class="knop" id="kies">Kies klanken</button>
+  <select id="set"></select>
+  <button class="knop aan" id="mengen">Door elkaar</button>
+  <span class="lbl">Weergave</span>
+  <button class="knop aan" id="wLetters">Letters</button>
+  <button class="knop" id="wBlok">Blokje</button>
+  <button class="knop" id="wScherm">Kleurscherm</button>
+  <button class="knop" id="raden">Raad de kleur</button>
+  <button class="knop aan" id="steunknop">Steunwoord</button>
+  <span class="lbl">Auto</span>
+  <button class="knop" id="auto">uit</button>
+  <input type="range" id="tempo" min="1" max="8" step="1" value="3">
+  <span class="lbl" id="tempoUit">3 s</span>
+  </div>
+  <span class="rek"></span>
+  <span id="teller">0 / 0</span>
+  <button class="knop" id="vorige">&#9664;</button>
+  <button class="knop" id="volgende">&#9654;</button>
+  <button class="knop" id="schermvullend">Volledig scherm</button>
+</div>
+
+<div id="podium">
+  <div id="blokwrap">
+    <div id="blok"></div>
+    <div id="streep" hidden></div>
+    <div id="stippen" hidden></div>
+  </div>
+  <div id="soort"></div>
+  <div id="steun"></div>
+  <div id="hint"></div>
+  <div id="leeg" hidden></div>
+</div>
+
+<div id="kleurbalk">
+  <span><i style="background:#7dc470"></i>korte klinker</span>
+  <span><i style="background:#ffe24e"></i>lange klinker</span>
+  <span><i style="background:#f0704a"></i>tweetekenklank</span>
+  <span><i style="background:#ffffff"></i>klankgroep</span>
+  <span><i style="background:#f7a928"></i>doffe klank</span>
+  <span><i style="background:#63c4ee"></i>medeklinker</span>
+</div>
+
+<div id="paneel">
+  <h2>Kies de klanken</h2>
+  <p>Tik een klank aan of uit. Zo flits je precies de klanken die bij deze groep of bij één leerling fout liepen.</p>
+  <div id="paneelinhoud"></div>
+  <div id="paneelknoppen">
+    <button class="knop" id="allesuit">Alles uit</button>
+    <button class="knop" id="allesaan">Alles aan</button>
+    <button class="knop aan" id="sluit">Klaar</button>
+  </div>
+</div>
+
+<script>
+/* Bewust geschreven zonder moderne taalconstructies (geen arrow functions,
+   template literals, let/const, spread of CSS-variabelen), zodat ook oudere
+   iPads en telefoons de app kunnen draaien. */
+
+var KLEUR = { groen: "#7dc470", geel: "#ffe24e", rood: "#f0704a",
+              wit: "#ffffff", oranje: "#f7a928", blauw: "#63c4ee" };
+var KLEURNAAM = { groen: "korte klinker", geel: "lange klinker", rood: "tweetekenklank",
+                  wit: "klankgroep", oranje: "doffe klank", blauw: "medeklinker" };
+var NEUTRAAL = "#8fa3b0";
+
+var K = [
+  { t: "a", k: "groen", w: "kat", g: "Korte klinkers" },
+  { t: "e", k: "groen", w: "pen", g: "Korte klinkers" },
+  { t: "i", k: "groen", w: "vis", g: "Korte klinkers" },
+  { t: "o", k: "groen", w: "bos", g: "Korte klinkers" },
+  { t: "u", k: "groen", w: "bus", g: "Korte klinkers" },
+
+  { t: "aa", k: "geel", w: "maan", g: "Lange klinkers" },
+  { t: "ee", k: "geel", w: "zee", g: "Lange klinkers" },
+  { t: "oo", k: "geel", w: "boom", g: "Lange klinkers" },
+  { t: "uu", k: "geel", w: "muur", g: "Lange klinkers" },
+
+  { t: "ij", k: "rood", w: "ijs (lange ij)", g: "Tweetekenklanken" },
+  { t: "ei", k: "rood", w: "trein (korte ei)", g: "Tweetekenklanken" },
+  { t: "ou", k: "rood", w: "koud", g: "Tweetekenklanken" },
+  { t: "au", k: "rood", w: "blauw", g: "Tweetekenklanken" },
+  { t: "ie", k: "rood", w: "dier", g: "Tweetekenklanken" },
+  { t: "oe", k: "rood", w: "koe", g: "Tweetekenklanken" },
+  { t: "eu", k: "rood", w: "deur", g: "Tweetekenklanken" },
+  { t: "ui", k: "rood", w: "huis", g: "Tweetekenklanken" },
+
+  { t: "aai", k: "wit", w: "haai", g: "Klankgroepen", m: "streep" },
+  { t: "ooi", k: "wit", w: "mooi", g: "Klankgroepen", m: "streep" },
+  { t: "oei", k: "wit", w: "groei", g: "Klankgroepen", m: "streep" },
+  { t: "eeuw", k: "wit", w: "leeuw", g: "Klankgroepen", m: "stip" },
+  { t: "ieuw", k: "wit", w: "nieuw", g: "Klankgroepen", m: "stip" },
+  { t: "uw", k: "wit", w: "duw", g: "Klankgroepen", m: "stip" },
+
+  { t: "e", k: "oranje", w: "lopen", g: "Doffe klanken" },
+  { t: "ig", k: "oranje", w: "grappig", g: "Doffe klanken" },
+  { t: "lijk", k: "oranje", w: "vrolijk", g: "Doffe klanken" },
+
+  { t: "b", k: "blauw", w: "bal", g: "Medeklinkers" },
+  { t: "d", k: "blauw", w: "dak", g: "Medeklinkers" },
+  { t: "f", k: "blauw", w: "fiets", g: "Medeklinkers" },
+  { t: "g", k: "blauw", w: "gat", g: "Medeklinkers" },
+  { t: "h", k: "blauw", w: "hoed", g: "Medeklinkers" },
+  { t: "j", k: "blauw", w: "jas", g: "Medeklinkers" },
+  { t: "k", k: "blauw", w: "kip", g: "Medeklinkers" },
+  { t: "l", k: "blauw", w: "lamp", g: "Medeklinkers" },
+  { t: "m", k: "blauw", w: "maan", g: "Medeklinkers" },
+  { t: "n", k: "blauw", w: "net", g: "Medeklinkers" },
+  { t: "p", k: "blauw", w: "pen", g: "Medeklinkers" },
+  { t: "r", k: "blauw", w: "roos", g: "Medeklinkers" },
+  { t: "s", k: "blauw", w: "sok", g: "Medeklinkers" },
+  { t: "t", k: "blauw", w: "tak", g: "Medeklinkers" },
+  { t: "v", k: "blauw", w: "vis", g: "Medeklinkers" },
+  { t: "w", k: "blauw", w: "wolk", g: "Medeklinkers" },
+  { t: "z", k: "blauw", w: "zon", g: "Medeklinkers" },
+
+  { t: "ng", k: "blauw", w: "ring", g: "Medeklinkergroepen" },
+  { t: "nk", k: "blauw", w: "bank", g: "Medeklinkergroepen" },
+  { t: "ch", k: "blauw", w: "lach", g: "Medeklinkergroepen" },
+  { t: "sch", k: "blauw", w: "school", g: "Medeklinkergroepen" },
+  { t: "schr", k: "blauw", w: "schrift", g: "Medeklinkergroepen" }
+];
+
+var keuze = [];
+for (var q = 0; q < K.length; q++) { keuze.push(q); }
+
+var REEKSEN = [
+  ["Hele kaart", function (i) { return true; }],
+  ["Alleen de klinkers", function (i) { return K[i].k !== "blauw"; }],
+  ["Korte klinkers", function (i) { return K[i].k === "groen"; }],
+  ["Lange klinkers", function (i) { return K[i].k === "geel"; }],
+  ["Korte tegenover lange", function (i) { return K[i].k === "groen" || K[i].k === "geel"; }],
+  ["Tweetekenklanken", function (i) { return K[i].k === "rood"; }],
+  ["Klankgroepen \u2014 wit", function (i) { return K[i].k === "wit"; }],
+  ["Klankgroepen met w", function (i) { return K[i].m === "stip"; }],
+  ["Klankgroepen met i", function (i) { return K[i].m === "streep"; }],
+  ["Doffe klanken", function (i) { return K[i].k === "oranje"; }],
+  ["Medeklinkers", function (i) { return K[i].g === "Medeklinkers"; }],
+  ["ng nk ch sch schr", function (i) { return K[i].g === "Medeklinkergroepen"; }],
+  ["Spoor Wit 1 \u2014 uw eeuw ieuw", function (i) { return K[i].m === "stip"; }],
+  ["Spoor Wit 2 \u2014 alle witte", function (i) { return K[i].k === "wit"; }],
+  ["Spoor Rood \u2014 ui ee ei ie eu ij oe", function (i) {
+      return ["ui", "ee", "ei", "ie", "eu", "ij", "oe"].indexOf(K[i].t) >= 0; }],
+  ["Eigen keuze", function (i) { return keuze.indexOf(i) >= 0; }]
+];
+
+function el(id) { return document.getElementById(id); }
+function aan(node, ja) { if (ja) { node.className = node.className.indexOf("aan") >= 0
+    ? node.className : node.className + " aan"; }
+  else { node.className = node.className.replace(/\s*aan/g, ""); } }
+
+var lijst = [], pos = 0, ronde = 1;
+var mengen = true, raden = false, steunAan = true, onthuld = true;
+var weergave = "letters", autoAan = false, timer = null;
+
+/* ---------- reeksen ---------- */
+for (var r = 0; r < REEKSEN.length; r++) {
+  var o = document.createElement("option");
+  o.value = r; o.appendChild(document.createTextNode(REEKSEN[r][0]));
+  el("set").appendChild(o);
+}
+el("set").value = 6;
+
+/* Schudden zonder dat dezelfde klank twee keer na elkaar komt,
+   ook niet over de grens van twee rondes heen. */
+function schud(arr, vorigeTeken) {
+  var i, j, t;
+  for (i = arr.length - 1; i > 0; i--) {
+    j = Math.floor(Math.random() * (i + 1));
+    t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+  for (var p = 0; p < arr.length; p++) {
+    var ervoor = (p === 0) ? vorigeTeken : K[arr[p - 1]].t;
+    if (ervoor && K[arr[p]].t === ervoor) {
+      for (var s = p + 1; s < arr.length; s++) {
+        if (K[arr[s]].t !== ervoor) { t = arr[p]; arr[p] = arr[s]; arr[s] = t; break; }
+      }
+    }
+  }
+}
+
+function bouwLijst() {
+  var test = REEKSEN[parseInt(el("set").value, 10)][1];
+  lijst = [];
+  for (var i = 0; i < K.length; i++) { if (test(i)) { lijst.push(i); } }
+  if (mengen) { schud(lijst); }
+  pos = 0; ronde = 1; onthuld = !raden;
+  toon();
+}
+
+function stap() {
+  if (!lijst.length) { return; }
+  pos++;
+  if (pos >= lijst.length) {
+    if (mengen) {
+      var laatste = K[lijst[lijst.length - 1]].t;
+      var vorigeRonde = lijst.join(",");
+      for (var p = 0; p < 20; p++) {
+        schud(lijst, laatste);
+        if (lijst.length < 3 || lijst.join(",") !== vorigeRonde) { break; }
+      }
+    }
+    pos = 0; ronde++;
+  }
+  onthuld = !raden;
+  toon();
+}
+
+/* ---------- tonen ---------- */
+function toon() {
+  var blok = el("blok");
+  if (!lijst.length) {
+    el("blokwrap").hidden = true;
+    el("steun").innerHTML = ""; el("soort").innerHTML = "";
+    el("leeg").hidden = false;
+    el("leeg").innerHTML = "Geen klanken in deze reeks. Kies er een andere, of stel er zelf een samen met \u201cKies klanken\u201d.";
+    el("teller").innerHTML = "0 / 0"; el("hint").innerHTML = "";
+    el("podium").style.background = "#132029";
+    el("podium").style.color = "#eef5f9";
+    return;
+  }
+  el("leeg").hidden = true;
+  el("blokwrap").hidden = false;
+
+  var k = K[lijst[pos]];
+  var kl = onthuld ? KLEUR[k.k] : NEUTRAAL;
+  var letters = (weergave === "letters");
+
+  blok.className = letters ? "letters" : "";
+  blok.innerHTML = "";
+  for (var i = 0; i < k.t.length; i++) {
+    var d = document.createElement("div");
+    d.className = "cel" + (i === k.t.length - 1 ? " laatste" : "");
+    d.appendChild(document.createTextNode(k.t.charAt(i)));
+    if (letters) { d.style.color = kl; }
+    blok.appendChild(d);
+  }
+  blok.style.background = letters ? "transparent" : kl;
+
+  var podium = el("podium");
+  if (weergave === "scherm") {
+    podium.style.background = onthuld ? kl : NEUTRAAL;
+    podium.style.color = "#14222c";
+  } else {
+    podium.style.background = "#132029";
+    podium.style.color = "#eef5f9";
+  }
+
+  var merk = letters ? kl : "#14222c";
+  el("streep").hidden = !(onthuld && k.m === "streep");
+  el("stippen").hidden = !(onthuld && k.m === "stip");
+  el("streep").style.borderTopColor = merk;
+  el("streep").style.borderBottomColor = merk;
+  el("stippen").style.color = merk;
+  if (!el("stippen").hidden) {
+    var punten = "";
+    for (var n = 0; n < k.t.length; n++) { punten += "<span>\u00b7</span>"; }
+    el("stippen").innerHTML = punten;
+  }
+
+  el("steun").innerHTML = (steunAan && onthuld) ? k.w : "";
+  el("soort").innerHTML = onthuld ? KLEURNAAM[k.k] : "";
+  el("soort").style.color = (letters && onthuld) ? kl : "";
+
+  el("teller").innerHTML = (pos + 1) + " / " + lijst.length + (ronde > 1 ? " \u00b7 ronde " + ronde : "");
+  el("hint").innerHTML = raden
+    ? (onthuld ? "Tik voor de volgende klank" : "Welke kleur? Tik om te tonen")
+    : "Tik op het scherm, of gebruik de pijltjes";
+}
+
+function volgende() {
+  if (!lijst.length) { return; }
+  if (raden && !onthuld) { onthuld = true; toon(); return; }
+  stap();
+}
+function vorige() {
+  if (!lijst.length) { return; }
+  if (pos > 0) { pos--; }
+  onthuld = !raden;
+  toon();
+}
+
+/* ---------- bediening ---------- */
+el("menu").onclick = function (e) {
+  if (e) { e.stopPropagation(); }
+  var b = document.body;
+  b.className = (b.className.indexOf("instel-open") >= 0) ? "" : "instel-open";
+};
+
+el("podium").onclick = volgende;
+el("volgende").onclick = function (e) { if (e) { e.stopPropagation(); } volgende(); };
+el("vorige").onclick = function (e) { if (e) { e.stopPropagation(); } vorige(); };
+el("set").onchange = bouwLijst;
+
+el("mengen").onclick = function () {
+  mengen = !mengen;
+  aan(this, mengen);
+  this.innerHTML = mengen ? "Door elkaar" : "Vaste volgorde";
+  bouwLijst();
+};
+el("raden").onclick = function () {
+  raden = !raden;
+  aan(this, raden);
+  onthuld = !raden;
+  toon();
+};
+el("steunknop").onclick = function () {
+  steunAan = !steunAan;
+  aan(this, steunAan);
+  toon();
+};
+
+var modusknoppen = [["wLetters", "letters"], ["wBlok", "blok"], ["wScherm", "scherm"]];
+for (var w = 0; w < modusknoppen.length; w++) {
+  (function (id, naam) {
+    el(id).onclick = function () {
+      weergave = naam;
+      for (var v = 0; v < modusknoppen.length; v++) {
+        aan(el(modusknoppen[v][0]), modusknoppen[v][0] === id);
+      }
+      toon();
+    };
+  })(modusknoppen[w][0], modusknoppen[w][1]);
+}
+
+el("tempo").oninput = el("tempo").onchange = function () {
+  el("tempoUit").innerHTML = el("tempo").value + " s";
+  if (autoAan) { startAuto(); }
+};
+el("auto").onclick = function () {
+  autoAan = !autoAan;
+  aan(this, autoAan);
+  this.innerHTML = autoAan ? "aan" : "uit";
+  if (autoAan) { startAuto(); } else { stopAuto(); }
+};
+function startAuto() {
+  stopAuto();
+  if (!lijst.length) { return; }
+  var ms = parseInt(el("tempo").value, 10) * 1000;
+  timer = setInterval(function () {
+    if (!lijst.length) { return; }
+    if (raden && !onthuld) { onthuld = true; toon(); }
+    else { stap(); }
+  }, raden ? ms / 2 : ms);
+}
+function stopAuto() { if (timer) { clearInterval(timer); timer = null; } }
+
+/* Volledig scherm bestaat niet op iPhone en op oudere iPads.
+   De knop verdwijnt dan, in plaats van niets te doen. */
+var doc = document.documentElement;
+var kanVolledig = !!(doc.requestFullscreen || doc.webkitRequestFullscreen ||
+                     doc.webkitRequestFullScreen || doc.msRequestFullscreen);
+if (!kanVolledig) {
+  el("schermvullend").style.display = "none";
+} else {
+  el("schermvullend").onclick = function (e) {
+    if (e) { e.stopPropagation(); }
+    var uit = document.fullscreenElement || document.webkitFullscreenElement;
+    if (!uit) {
+      if (doc.requestFullscreen) { doc.requestFullscreen(); }
+      else if (doc.webkitRequestFullscreen) { doc.webkitRequestFullscreen(); }
+      else if (doc.webkitRequestFullScreen) { doc.webkitRequestFullScreen(); }
+      else if (doc.msRequestFullscreen) { doc.msRequestFullscreen(); }
+    } else {
+      if (document.exitFullscreen) { document.exitFullscreen(); }
+      else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+    }
+  };
+}
+
+document.onkeydown = function (e) {
+  if (el("paneel").className.indexOf("open") >= 0) { return; }
+  var c = e.keyCode;
+  if (c === 32 || c === 39) { if (e.preventDefault) { e.preventDefault(); } volgende(); }
+  if (c === 37) { if (e.preventDefault) { e.preventDefault(); } vorige(); }
+};
+
+/* ---------- keuzepaneel ---------- */
+var groepen = [];
+for (var i2 = 0; i2 < K.length; i2++) {
+  var gevonden = null;
+  for (var gg = 0; gg < groepen.length; gg++) {
+    if (groepen[gg].naam === K[i2].g) { gevonden = groepen[gg]; }
+  }
+  if (!gevonden) { gevonden = { naam: K[i2].g, items: [] }; groepen.push(gevonden); }
+  gevonden.items.push(i2);
+}
+var inhoud = el("paneelinhoud");
+for (var g2 = 0; g2 < groepen.length; g2++) {
+  var vak = document.createElement("div");
+  vak.className = "groep";
+  var titel = document.createElement("h3");
+  titel.appendChild(document.createTextNode(groepen[g2].naam));
+  vak.appendChild(titel);
+  var rij = document.createElement("div");
+  rij.className = "mini";
+  for (var m2 = 0; m2 < groepen[g2].items.length; m2++) {
+    (function (idx) {
+      var b = document.createElement("button");
+      b.appendChild(document.createTextNode(K[idx].t));
+      b.style.background = KLEUR[K[idx].k];
+      b.className = "mini-knop aan";
+      b.setAttribute("data-i", idx);
+      b.onclick = function () {
+        var plek = keuze.indexOf(idx);
+        if (plek >= 0) { keuze.splice(plek, 1); } else { keuze.push(idx); }
+        aan(b, keuze.indexOf(idx) >= 0);
+        if (parseInt(el("set").value, 10) === REEKSEN.length - 1) { bouwLijst(); }
+      };
+      rij.appendChild(b);
+    })(groepen[g2].items[m2]);
+  }
+  vak.appendChild(rij);
+  inhoud.appendChild(vak);
+}
+function paneelBij() {
+  var knoppen = el("paneelinhoud").getElementsByTagName("button");
+  for (var i3 = 0; i3 < knoppen.length; i3++) {
+    aan(knoppen[i3], keuze.indexOf(parseInt(knoppen[i3].getAttribute("data-i"), 10)) >= 0);
+  }
+}
+el("kies").onclick = function () { el("paneel").className = "open"; };
+el("sluit").onclick = function () {
+  el("paneel").className = "";
+  el("set").value = REEKSEN.length - 1;
+  bouwLijst();
+};
+el("allesuit").onclick = function () { keuze = []; paneelBij(); };
+el("allesaan").onclick = function () {
+  keuze = [];
+  for (var i4 = 0; i4 < K.length; i4++) { keuze.push(i4); }
+  paneelBij();
+};
+
+bouwLijst();
+</script>
+</body>
+</html>

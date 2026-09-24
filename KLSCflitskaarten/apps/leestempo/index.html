@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leestempo &amp; Klankblokjes — M3-E3</title>
+<style>
+:root{
+  --stage:#16232e;
+  --panel:#1f2f3d;
+  --panel-2:#27394a;
+  --line:#3a5062;
+  --text:#eef4f7;
+  --dim:#9db0bf;
+  --geel:#ffe24e;
+  --rood:#f0704a;
+  --blauw:#63c4ee;
+  --groen:#7dc470;
+  --oranje:#f7a928;
+  --wit:#ffffff;
+  --accent:#f2c14e;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--stage);
+  color:var(--text);
+  font-family:Verdana,Tahoma,"Segoe UI",sans-serif;
+  font-size:16px;
+  line-height:1.5;
+  -webkit-text-size-adjust:100%;
+}
+header{
+  padding:14px 20px 0;
+  display:flex;flex-wrap:wrap;gap:14px;align-items:baseline;
+}
+header h1{
+  font-size:18px;margin:0;font-weight:700;letter-spacing:.02em;
+}
+header p{margin:0;color:var(--dim);font-size:13px}
+nav{
+  display:flex;gap:6px;padding:12px 20px 0;flex-wrap:wrap;
+}
+nav button{
+  font:inherit;font-size:14px;font-weight:700;
+  background:var(--panel);color:var(--dim);
+  border:2px solid transparent;border-bottom:none;
+  border-radius:10px 10px 0 0;
+  padding:9px 16px;cursor:pointer;
+}
+nav button[aria-selected="true"]{background:var(--panel-2);color:var(--geel)}
+nav button:focus-visible{outline:3px solid var(--geel);outline-offset:2px}
+main{padding:0 20px 40px}
+section[hidden]{display:none}
+.wrap{background:var(--panel-2);border-radius:0 12px 12px 12px;padding:18px}
+
+/* ---------- bediening ---------- */
+.controls{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end}
+.ctl{display:flex;flex-direction:column;gap:5px}
+.ctl label{font-size:12px;color:var(--dim);font-weight:700}
+select,input[type=text],input[type=number],textarea{
+  font:inherit;font-size:15px;background:var(--panel);color:var(--text);
+  border:2px solid var(--line);border-radius:8px;padding:7px 9px;
+}
+textarea{width:100%;min-height:80px;resize:vertical}
+select:focus,input:focus,textarea:focus{outline:none;border-color:var(--geel)}
+button.knop{
+  font:inherit;font-weight:700;font-size:15px;cursor:pointer;
+  background:var(--panel);color:var(--text);
+  border:2px solid var(--line);border-radius:8px;padding:8px 14px;
+}
+button.knop:hover{border-color:var(--geel)}
+button.knop:focus-visible{outline:3px solid var(--geel);outline-offset:2px}
+button.knop.hoofd{background:var(--geel);color:#16232e;border-color:var(--geel)}
+button.knop.stil{color:var(--dim)}
+.tempo{display:flex;align-items:center;gap:12px}
+.tempo input[type=range]{width:220px;accent-color:var(--geel)}
+.bpm{font-size:34px;font-weight:700;color:var(--geel);min-width:78px;text-align:right;font-variant-numeric:tabular-nums}
+.bpm small{font-size:12px;color:var(--dim);font-weight:400;display:block;text-align:right;margin-top:-6px}
+.rij-knoppen{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.meta{color:var(--dim);font-size:13px}
+
+/* ---------- tikbalk ---------- */
+.tikbalk{display:flex;gap:8px;margin:16px 0 6px}
+.tik{flex:1;height:12px;border-radius:4px;background:var(--panel)}
+.tik.aan{background:var(--geel)}
+.tik.accent{background:var(--rood)}
+
+/* ---------- woordpodium ---------- */
+.podium{
+  background:var(--panel);border-radius:12px;margin-top:10px;
+  min-height:270px;display:flex;align-items:center;justify-content:center;
+  padding:22px;
+}
+.groot{font-size:clamp(56px,14vw,150px);font-weight:700;letter-spacing:.02em;line-height:1.1}
+.groot .volgend{display:block;font-size:.22em;color:var(--dim);font-weight:400;margin-top:14px}
+.rooster{display:flex;flex-wrap:wrap;gap:10px 14px;justify-content:center;width:100%}
+.rooster span{
+  font-size:clamp(24px,4.4vw,44px);font-weight:700;
+  padding:4px 12px;border-radius:8px;color:var(--dim);
+}
+.rooster span.nu{background:var(--geel);color:#16232e}
+.rooster span.gehad{color:var(--text)}
+
+/* ---------- fouten ---------- */
+.telblok{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.telling{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;min-width:40px;text-align:center}
+.advies{background:var(--panel);border-left:6px solid var(--geel);padding:10px 14px;border-radius:0 8px 8px 0;margin-top:14px;font-size:15px}
+
+/* ---------- blokjes ---------- */
+.blokrij{display:flex;flex-wrap:wrap;align-items:stretch;gap:0;margin:18px 0;min-height:120px}
+.blok{
+  position:relative;min-width:82px;height:104px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:40px;font-weight:700;color:#16232e;cursor:pointer;
+  border:none;font-family:inherit;padding:0 10px;
+}
+.blok::after{
+  content:"";position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+  width:34px;height:14px;border-radius:7px 7px 3px 3px;background:inherit;
+}
+.blok.kort{background:var(--groen)}
+.blok.lang{background:var(--geel)}
+.blok.twee{background:var(--rood)}
+.blok.wit{background:var(--wit)}
+.blok.dof{background:var(--oranje)}
+.blok.med{background:var(--blauw)}
+.blok.hand::before{content:"";position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:18px;height:3px;border-radius:2px;background:rgba(22,35,46,.45)}
+.kier{width:16px;background:none;border:none;cursor:pointer;padding:0;align-self:center;height:104px}
+.kier span{display:block;width:4px;height:34px;margin:0 auto;border-radius:2px;background:var(--line)}
+.kier:hover span{background:var(--geel);height:60px}
+.legende{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--dim);margin-top:8px}
+.legende i{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:6px;vertical-align:-2px}
+.telkaart{display:flex;gap:26px;flex-wrap:wrap;margin-top:10px;font-size:15px}
+.telkaart b{font-size:26px;color:var(--geel);display:block;font-variant-numeric:tabular-nums}
+.ketting{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.ketting button{
+  font:inherit;font-weight:700;font-size:17px;cursor:pointer;
+  background:var(--panel);color:var(--text);border:2px solid var(--line);
+  border-radius:8px;padding:6px 12px;
+}
+.ketting button:hover{border-color:var(--geel)}
+
+/* ---------- tijdmeting ---------- */
+.klok{font-size:64px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--geel);text-align:center;margin:10px 0}
+table{border-collapse:collapse;width:100%;margin-top:14px;font-size:15px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{color:var(--dim);font-size:12px;text-transform:none;font-weight:700}
+.balk{height:14px;border-radius:7px;background:var(--geel);min-width:3px}
+h2{font-size:17px;margin:0 0 4px}
+.uitleg{color:var(--dim);font-size:14px;margin:0 0 16px;max-width:70ch}
+hr{border:none;border-top:1px solid var(--line);margin:22px 0}
+@media (prefers-reduced-motion:no-preference){
+  .rooster span.nu,.groot{transition:background-color .06s linear}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Leestempo &amp; Klankblokjes</h1>
+  <p>Leesniveau M3-E3 · groepswerk op het scherm</p>
+</header>
+
+<nav role="tablist">
+  <button role="tab" id="t1" aria-selected="true" aria-controls="p1">Tempolezen</button>
+  <button role="tab" id="t2" aria-selected="false" aria-controls="p2">Klankblokjes</button>
+  <button role="tab" id="t3" aria-selected="false" aria-controls="p3">Herhaald lezen</button>
+</nav>
+
+<main>
+
+<!-- ============ TEMPOLEZEN ============ -->
+<section id="p1" role="tabpanel" aria-labelledby="t1">
+  <div class="wrap">
+    <p class="uitleg">Kies een rijtje, zet het tempo laag genoeg dat iedereen mee kan, en lees samen mee op de tik. Eén woord per tik betekent dat het aantal slagen per minuut ook het aantal woorden per minuut is.</p>
+
+    <div class="controls">
+      <div class="ctl">
+        <label for="lijst">Rijtje</label>
+        <select id="lijst"></select>
+      </div>
+      <div class="ctl">
+        <label for="perWoord">Tikken per woord</label>
+        <select id="perWoord">
+          <option value="2">2 tikken (rustig)</option>
+          <option value="1" selected>1 tik</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label for="weergave">Weergave</label>
+        <select id="weergave">
+          <option value="rij" selected>Heel het rijtje</option>
+          <option value="groot">Eén woord groot</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label for="stap">Tempo per ronde</label>
+        <select id="stap">
+          <option value="0">gelijk houden</option>
+          <option value="5" selected>+5 slagen</option>
+          <option value="10">+10 slagen</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label for="shuffle">Volgorde</label>
+        <select id="shuffle">
+          <option value="0" selected>zoals in de lijst</option>
+          <option value="1">door elkaar</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="tempo" style="margin-top:16px">
+      <input type="range" id="bpm" min="30" max="140" step="5" value="50" aria-label="tempo in slagen per minuut">
+      <div class="bpm"><span id="bpmUit">50</span><small>slagen/min</small></div>
+      <div class="rij-knoppen">
+        <button class="knop hoofd" id="start">Start</button>
+        <button class="knop" id="stop">Stop</button>
+        <button class="knop stil" id="klik">Tik hoorbaar: aan</button>
+      </div>
+    </div>
+
+    <div class="tikbalk" id="tikbalk" aria-hidden="true"></div>
+    <div class="meta" id="rondeUit">Ronde 1 · nog niet gestart</div>
+
+    <div class="podium" id="podium"></div>
+
+    <div class="telblok">
+      <span class="meta">Fouten in deze ronde:</span>
+      <button class="knop" id="foutMin">−</button>
+      <span class="telling" id="foutUit">0</span>
+      <button class="knop" id="foutPlus">+</button>
+      <button class="knop stil" id="foutNul">op nul</button>
+    </div>
+    <div class="advies" id="advies">Regel: eerst juist, dan snel. Nul of één fout in een ronde? Volgende ronde mag sneller. Vier of meer? Tempo terug naar het vorige niveau.</div>
+
+    <hr>
+    <div class="ctl">
+      <label for="eigen">Eigen woorden of zin (scheid met spaties of nieuwe regels)</label>
+      <textarea id="eigen" placeholder="de kip zit op het dak"></textarea>
+    </div>
+    <div class="rij-knoppen" style="margin-top:10px">
+      <button class="knop" id="eigenLaden">Gebruik deze woorden</button>
+      <span class="meta">Handig om een stukje uit het leesboek van deze week op tempo te zetten.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ KLANKBLOKJES ============ -->
+<section id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <div class="wrap">
+    <p class="uitleg">Eén blokje is één klank, niet één letter — met de kleuren van de klank-tekenkaart van Taal in Blokjes. Klik tussen twee blokjes om ze samen te voegen, klik op een blokje om het te splitsen. De kleur is een automatisch voorstel: open of gesloten lettergreep en de doffe e worden geschat, dus zet met <b>Klik = kleur kiezen</b> gerust een blokje recht.</p>
+
+    <div class="controls">
+      <div class="ctl">
+        <label for="woordIn">Woord</label>
+        <input type="text" id="woordIn" value="huis" autocomplete="off" spellcheck="false">
+      </div>
+      <button class="knop hoofd" id="bouw">Bouw</button>
+      <button class="knop" id="kleurmodus" title="wissel tussen blokjes indelen en kleuren aanpassen">Klik = splitsen</button>
+      <div class="ctl">
+        <label for="setKeuze">Of kies een reeks</label>
+        <select id="setKeuze"></select>
+      </div>
+    </div>
+
+    <div class="ketting" id="setrij"></div>
+    <div class="blokrij" id="blokrij"></div>
+
+    <div class="telkaart">
+      <div><b id="telLetters">0</b>letters</div>
+      <div><b id="telKlanken">0</b>klanken</div>
+      <div><b id="telKlinkers">0</b>klinkers</div>
+    </div>
+
+    <div class="legende">
+      <span><i style="background:var(--groen)"></i>korte klinker</span>
+      <span><i style="background:var(--geel)"></i>lange klinker</span>
+      <span><i style="background:var(--rood)"></i>tweetekenklank</span>
+      <span><i style="background:var(--wit);border:1px solid #8aa"></i>klankgroep</span>
+      <span><i style="background:var(--oranje)"></i>doffe klank</span>
+      <span><i style="background:var(--blauw)"></i>medeklinker</span>
+    </div>
+
+    <hr>
+    <h2>Verander één blokje</h2>
+    <p class="uitleg">Klik een woord aan om het te bouwen. Telkens verandert er precies één blokje. Laat de leerlingen eerst voorspellen welk blokje weg moet.</p>
+    <div id="kettingen"></div>
+  </div>
+</section>
+
+<!-- ============ HERHAALD LEZEN ============ -->
+<section id="p3" role="tabpanel" aria-labelledby="t3" hidden>
+  <div class="wrap">
+    <p class="uitleg">Dezelfde korte tekst drie keer lezen, met de tijd erbij. De leerling leest tegen zijn eigen vorige poging, niet tegen de anderen.</p>
+
+    <div class="controls">
+      <div class="ctl">
+        <label for="naam">Naam</label>
+        <input type="text" id="naam" autocomplete="off" placeholder="voornaam">
+      </div>
+      <div class="ctl">
+        <label for="aantalWoorden">Aantal woorden in de tekst</label>
+        <input type="number" id="aantalWoorden" value="60" min="5" max="500">
+      </div>
+      <div class="ctl">
+        <label for="fouten3">Fouten</label>
+        <input type="number" id="fouten3" value="0" min="0" max="99">
+      </div>
+    </div>
+
+    <div class="klok" id="klok">0,0 s</div>
+    <div class="rij-knoppen" style="justify-content:center">
+      <button class="knop hoofd" id="klokStart">Start</button>
+      <button class="knop" id="klokStop">Stop en noteer</button>
+      <button class="knop stil" id="klokWis">Tabel leegmaken</button>
+    </div>
+
+    <table>
+      <thead><tr><th>Naam</th><th>Poging</th><th>Tijd</th><th>Juiste woorden/min</th><th></th></tr></thead>
+      <tbody id="tabel"><tr><td colspan="5" class="meta">Nog geen metingen.</td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+</main>
+
+<script>
+/* ============================================================
+   Woordenlijsten — M3 tot E3
+   ============================================================ */
+const LIJSTEN = [
+  {naam:"1 · mkm klankzuiver (M3)", w:"maan roos vis sok jas boom kip doos muis teen buik gat pen bus kar hoed zeep tak poot lip dak neus koek raam"},
+  {naam:"2 · tweetekenklanken (M3)", w:"boom boot koek boek huis muis deur zeep weer dier vier tuin duin geit dijk laan maan buur muur koe zee boer duif nieuw"},
+  {naam:"3 · wisselrijtje bak-bal-bel", w:"bak bal bel bed bad bak bel bal"},
+  {naam:"4 · wisselrijtje maan-maat-maal", w:"maan maat maal man mat mal maan man"},
+  {naam:"5 · wisselrijtje pot-pop-pak", w:"pot pop pak pan pen pit pot pak"},
+  {naam:"6 · wisselrijtje koek-koel-hoek", w:"koek koel hoek hoed boek boer koek hoek"},
+  {naam:"7 · wisselrijtje huis-huid-muis", w:"huis huid muis muil buik buis huis muis"},
+  {naam:"8 · cluster vooraan (E3)", w:"spin stap kruk vlag brief plank klok stoel trap zwaan smal snel gras kruis drie plein vlieg school blad straat sprong sneeuw"},
+  {naam:"9 · cluster achteraan (E3)", w:"kist wolf harp kalm melk hulp wolk kerk bord tand hand wind kast vorst hemd arm berg worm kort sterk borst veld"},
+  {naam:"10 · twee lettergrepen (E3)", w:"bakker tafel vinger appel winter konijn vlinder kikker water zomer dokter molen jongen meisje ramen bomen wegen tijger muziek sleutel venster"},
+  {naam:"11 · flitswoorden (hoogfrequent)", w:"de het een ik is en je dat niet ook maar met wat zijn heeft waar hoe toen deze want door naar kan moet als om van voor zo dan weer nog veel altijd samen omdat"},
+  {naam:"12 · zin: de kip op het dak", w:"De kip zit op het dak van het hok."},
+  {naam:"13 · zin: naar school", w:"Ik ga met de bus naar school en ik ben op tijd."},
+  {naam:"14 · zin: koud weer", w:"Het is koud, dus ik doe mijn dikke jas aan."},
+  {naam:"15 · zin: de vlinder", w:"In de tuin zit een vlinder op een grote gele bloem."}
+];
+
+const BLOKSETS = [
+  {naam:"— kies —", w:""},
+  {naam:"Letters tellen ≠ blokjes tellen", w:"huis boom koek geit nieuw school"},
+  {naam:"Korte klinker tegenover lange", w:"man maan bom boom tak taak zon zoon"},
+  {naam:"Open lettergreep: lange klinker", w:"tafel bomen ramen molen water zomer"},
+  {naam:"Doffe klanken", w:"de bakker appel lopen grappig vrolijk"},
+  {naam:"Tweetekenklanken", w:"huis deur boer geit tuin reis"},
+  {naam:"Klankgroepen: wit", w:"haai mooi groei leeuw nieuw duw"},
+  {naam:"ng nk ch sch schr", w:"lang bank lach school schrift denken"}
+];
+
+const KETTINGEN = [
+  ["maan","man","mat","mot","pot","pop"],
+  ["bak","bal","bel","bed","bad","bod"],
+  ["vis","vies","vier","dier","dief","doof"],
+  ["buik","buis","huis","huid","hoed","goed","goud"],
+  ["klok","klop","klom","kom","kam","kar"],
+  ["boom","boon","been","beer","peer","paar"]
+];
+
+/* ============================================================
+   Tabs
+   ============================================================ */
+document.querySelectorAll('nav button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('nav button').forEach(x=>{
+      x.setAttribute('aria-selected', x===b ? 'true':'false');
+      document.getElementById(x.getAttribute('aria-controls')).hidden = (x!==b);
+    });
+    if(b.id!=='t1') stopMetronoom();
+  });
+});
+
+/* ============================================================
+   Tempolezen
+   ============================================================ */
+const selLijst=document.getElementById('lijst');
+LIJSTEN.forEach((l,i)=>{
+  const o=document.createElement('option'); o.value=i; o.textContent=l.naam; selLijst.appendChild(o);
+});
+
+let woorden=[], index=-1, ronde=1, fouten=0;
+let ctx=null, loopt=false, volgendeTik=0, tikTeller=0, wachtrij=[], timer=null, klikAan=true;
+
+const el = id=>document.getElementById(id);
+const podium=el('podium'), tikbalk=el('tikbalk');
+
+for(let i=0;i<4;i++){ const d=document.createElement('div'); d.className='tik'; tikbalk.appendChild(d); }
+
+function laadLijst(){
+  const bron=LIJSTEN[+selLijst.value].w;
+  woorden=bron.split(/\s+/).filter(Boolean);
+  if(el('shuffle').value==='1'){
+    for(let i=woorden.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[woorden[i],woorden[j]]=[woorden[j],woorden[i]];}
+  }
+  index=-1; ronde=1; fouten=0; el('foutUit').textContent='0';
+  toonRonde(); teken();
+}
+selLijst.addEventListener('change',()=>{stopMetronoom();laadLijst();});
+el('shuffle').addEventListener('change',()=>{stopMetronoom();laadLijst();});
+
+el('eigenLaden').addEventListener('click',()=>{
+  const t=el('eigen').value.trim();
+  if(!t) return;
+  stopMetronoom();
+  woorden=t.split(/\s+/).filter(Boolean);
+  index=-1; ronde=1; fouten=0; el('foutUit').textContent='0';
+  toonRonde(); teken();
+});
+
+function toonRonde(){
+  el('rondeUit').textContent = `Ronde ${ronde} · ${woorden.length} woorden · ${el('bpm').value} slagen/min` + (loopt?'':' · gestopt');
+}
+
+function teken(){
+  if(el('weergave').value==='groot'){
+    const nu = index>=0 && index<woorden.length ? woorden[index] : '…';
+    const na = index+1<woorden.length ? woorden[index+1] : '';
+    podium.innerHTML = `<div class="groot">${nu}<span class="volgend">${na}</span></div>`;
+  } else {
+    const r=document.createElement('div'); r.className='rooster';
+    woorden.forEach((w,i)=>{
+      const s=document.createElement('span');
+      s.textContent=w;
+      if(i===index) s.className='nu';
+      else if(i<index) s.className='gehad';
+      r.appendChild(s);
+    });
+    podium.innerHTML=''; podium.appendChild(r);
+  }
+}
+
+el('bpm').addEventListener('input',()=>{ el('bpmUit').textContent=el('bpm').value; toonRonde(); });
+
+function tikGeluid(t,accent){
+  if(!klikAan) return;
+  const o=ctx.createOscillator(), g=ctx.createGain();
+  o.frequency.value = accent?1400:900;
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(accent?0.5:0.32,t+0.001);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.06);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(t); o.stop(t+0.08);
+}
+
+function plan(){
+  const spw=60/(+el('bpm').value);
+  while(volgendeTik < ctx.currentTime + 0.12){
+    const accent = (tikTeller%4===0);
+    tikGeluid(volgendeTik,accent);
+    wachtrij.push({t:volgendeTik, tik:tikTeller});
+    volgendeTik += spw;
+    tikTeller++;
+  }
+  timer=setTimeout(plan,25);
+}
+
+function beeldlus(){
+  if(!loopt) return;
+  const perWoord=+el('perWoord').value;
+  while(wachtrij.length && wachtrij[0].t <= ctx.currentTime){
+    const n=wachtrij.shift();
+    // 4 tellen aftellen voor de start
+    const netto = n.tik - 4;
+    document.querySelectorAll('.tik').forEach((d,i)=>{
+      d.className='tik'+(i===(n.tik%4)?(n.tik%4===0?' accent':' aan'):'');
+    });
+    if(netto>=0 && netto%perWoord===0){
+      const w=Math.floor(netto/perWoord);
+      if(w>=woorden.length){ eindeRonde(); return; }
+      index=w; teken();
+    }
+  }
+  requestAnimationFrame(beeldlus);
+}
+
+function eindeRonde(){
+  stopMetronoom();
+  const stap=+el('stap').value;
+  const advies = fouten<=1
+    ? `Ronde ${ronde} afgerond met ${fouten} fout${fouten===1?'':'en'}. Tempo mag omhoog.`
+    : fouten<=3
+      ? `Ronde ${ronde} afgerond met ${fouten} fouten. Zelfde tempo nog eens.`
+      : `Ronde ${ronde} afgerond met ${fouten} fouten. Zet het tempo lager en lees eerst samen voor.`;
+  el('advies').textContent = advies;
+  if(fouten<=1 && stap>0){
+    el('bpm').value = Math.min(140, +el('bpm').value + stap);
+    el('bpmUit').textContent = el('bpm').value;
+  } else if(fouten>3){
+    el('bpm').value = Math.max(30, +el('bpm').value - 5);
+    el('bpmUit').textContent = el('bpm').value;
+  }
+  ronde++; index=-1; fouten=0; el('foutUit').textContent='0';
+  toonRonde(); teken();
+}
+
+function startMetronoom(){
+  if(loopt) return;
+  if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)();
+  if(ctx.state==='suspended') ctx.resume();
+  if(!woorden.length) laadLijst();
+  loopt=true; index=-1; wachtrij=[]; tikTeller=0;
+  volgendeTik=ctx.currentTime+0.15;
+  el('advies').textContent='Vier tikken om in te komen, dan begint het eerste woord.';
+  toonRonde(); teken();
+  plan(); requestAnimationFrame(beeldlus);
+}
+function stopMetronoom(){
+  loopt=false;
+  if(timer){clearTimeout(timer);timer=null;}
+  wachtrij=[];
+  document.querySelectorAll('.tik').forEach(d=>d.className='tik');
+  toonRonde();
+}
+el('start').addEventListener('click',startMetronoom);
+el('stop').addEventListener('click',stopMetronoom);
+el('klik').addEventListener('click',e=>{
+  klikAan=!klikAan;
+  e.target.textContent='Tik hoorbaar: '+(klikAan?'aan':'uit');
+});
+el('foutPlus').addEventListener('click',()=>{fouten++;el('foutUit').textContent=fouten;});
+el('foutMin').addEventListener('click',()=>{fouten=Math.max(0,fouten-1);el('foutUit').textContent=fouten;});
+el('foutNul').addEventListener('click',()=>{fouten=0;el('foutUit').textContent=fouten;});
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('p1').hidden) return;
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT') return;
+  if(e.code==='Space'){ e.preventDefault(); loopt?stopMetronoom():startMetronoom(); }
+  if(e.key==='f'||e.key==='F'){ fouten++; el('foutUit').textContent=fouten; }
+});
+
+/* ============================================================
+   Klankblokjes
+   ============================================================ */
+const KLINKERLETTERS='aeiou';
+const TWEETEKEN = ['ei','ij','ou','au','ie','oe','eu','ui'];
+const LANG = ['aa','ee','oo','uu'];
+const WIT = ['aai','ooi','oei','eeuw','ieuw','uw'];
+const MEDEGROEP = ['schr','sch','ch','ng','nk'];
+const GROEPEN = ['schr','sch','eeuw','ieuw','aai','ooi','oei','ch','ng','nk']
+                .concat(LANG, TWEETEKEN, ['uw']);
+const SOORTEN = ['kort','lang','twee','wit','dof','med'];
+const SOORTNAAM = {kort:'korte klinker',lang:'lange klinker',twee:'tweetekenklank',
+                   wit:'klankgroep',dof:'doffe klank',med:'medeklinker'};
+
+function splits(woord){
+  let w=woord.toLowerCase().replace(/[^a-zà-ÿ]/g,'');
+  let staart=null;
+  for(const suf of ['lijk','ig']){
+    if(w.endsWith(suf) && w.length>suf.length+1){ staart=suf; w=w.slice(0,-suf.length); break; }
+  }
+  const uit=[]; let i=0;
+  while(i<w.length){
+    const g=GROEPEN.find(m=>w.startsWith(m,i));
+    if(g){ uit.push(g); i+=g.length; } else { uit.push(w[i]); i++; }
+  }
+  if(staart) uit.push(staart);
+  return uit;
+}
+function isKlinkerGroep(g){
+  if(g==='ig'||g==='lijk') return true;
+  if(MEDEGROEP.includes(g)) return false;
+  if(TWEETEKEN.includes(g)||WIT.includes(g)||LANG.includes(g)) return true;
+  return [...g].every(c=>KLINKERLETTERS.includes(c));
+}
+
+/* Automatisch voorstel volgens Taal in Blokjes. Open of gesloten lettergreep en de
+   doffe e worden geschat; met "Klik = kleur kiezen" zet je een blokje zelf recht. */
+function raadSoort(groepen,i){
+  const g=groepen[i];
+  if(g==='ig'||g==='lijk') return 'dof';
+  if(!isKlinkerGroep(g)) return 'med';
+  if(WIT.includes(g)) return 'wit';
+  if(TWEETEKEN.includes(g)) return 'twee';
+  if(LANG.includes(g)) return 'lang';
+
+  const woord=groepen.filter(x=>x!=='ig'&&x!=='lijk').join('');
+  const klinkerIndexen=groepen.map((x,j)=>isKlinkerGroep(x)?j:-1).filter(j=>j>=0);
+  const eersteKlinker = klinkerIndexen[0]===i;
+  const laatste = (i===groepen.length-1);
+  const medeErna=[]; let k=i+1;
+  while(k<groepen.length && !isKlinkerGroep(groepen[k])){ medeErna.push(groepen[k]); k++; }
+  const nogKlinkerErna = k<groepen.length;
+
+  if(g==='e'){
+    if(laatste) return 'dof';
+    const vorige = klinkerIndexen[klinkerIndexen.indexOf(i)-1];
+    if(!eersteKlinker && raadSoort(groepen,vorige)!=='dof') return 'dof';
+    if(!eersteKlinker && !nogKlinkerErna && medeErna.length===1 &&
+       ['n','l','r','m','s'].includes(medeErna[0])) return 'dof';
+    if(i===1 && woord.length>=6 &&
+       (['g','b'].includes(groepen[0]) || (groepen[0]==='v' && groepen[2]==='r'))) return 'dof';
+  }
+  if(medeErna.length===0) return 'lang';
+  if(nogKlinkerErna && medeErna.length===1 &&
+     medeErna[0]!=='ng' && medeErna[0]!=='nk') return 'lang';
+  return 'kort';
+}
+
+let groepen=[], kleuren=[], kleurmodus=false;
+
+function herbereken(){
+  kleuren = groepen.map((g,i)=> kleuren[i] && kleuren[i].vast ? kleuren[i] : {s:raadSoort(groepen,i),vast:false});
+}
+function toonBlokjes(){
+  const rij=el('blokrij'); rij.innerHTML='';
+  groepen.forEach((g,i)=>{
+    const b=document.createElement('button');
+    const soort=kleuren[i].s;
+    b.className='blok '+soort+(kleuren[i].vast?' hand':'');
+    b.textContent=g;
+    b.title = kleurmodus ? SOORTNAAM[soort]+' — klik voor de volgende kleur'
+                         : SOORTNAAM[soort]+(g.length>1?' — klik om te splitsen':'');
+    b.addEventListener('click',()=>{
+      if(kleurmodus){
+        const n=(SOORTEN.indexOf(kleuren[i].s)+1)%SOORTEN.length;
+        kleuren[i]={s:SOORTEN[n],vast:true};
+        toonBlokjes();
+      } else if(g.length>1){
+        const losse=[...g];
+        groepen.splice(i,1,...losse);
+        kleuren.splice(i,1,...losse.map(()=>null));
+        herbereken(); toonBlokjes();
+      }
+    });
+    rij.appendChild(b);
+    if(i<groepen.length-1){
+      const k=document.createElement('button');
+      k.className='kier'; k.title='klik om samen te voegen';
+      k.innerHTML='<span></span>';
+      k.addEventListener('click',()=>{
+        groepen.splice(i,2,groepen[i]+groepen[i+1]);
+        kleuren.splice(i,2,null);
+        herbereken(); toonBlokjes();
+      });
+      rij.appendChild(k);
+    }
+  });
+  el('telLetters').textContent=groepen.join('').length;
+  el('telKlanken').textContent=groepen.length;
+  el('telKlinkers').textContent=groepen.filter((g,i)=>kleuren[i].s!=='med').length;
+}
+function bouwWoord(w){
+  el('woordIn').value=w;
+  groepen=splits(w); kleuren=groepen.map(()=>null);
+  herbereken(); toonBlokjes();
+}
+el('kleurmodus').addEventListener('click',e=>{
+  kleurmodus=!kleurmodus;
+  e.target.textContent = kleurmodus ? 'Klik = kleur kiezen' : 'Klik = splitsen';
+  e.target.classList.toggle('hoofd',kleurmodus);
+  toonBlokjes();
+});
+el('bouw').addEventListener('click',()=>bouwWoord(el('woordIn').value));
+el('woordIn').addEventListener('keydown',e=>{ if(e.key==='Enter') bouwWoord(el('woordIn').value); });
+
+const setSel=el('setKeuze');
+BLOKSETS.forEach((s,i)=>{const o=document.createElement('option');o.value=i;o.textContent=s.naam;setSel.appendChild(o);});
+setSel.addEventListener('change',()=>{
+  const set=BLOKSETS[+setSel.value];
+  const rij=el('setrij'); rij.innerHTML='';
+  if(!set.w) return;
+  set.w.split(' ').forEach(w=>{
+    const b=document.createElement('button'); b.textContent=w;
+    b.addEventListener('click',()=>bouwWoord(w));
+    rij.appendChild(b);
+  });
+  bouwWoord(set.w.split(' ')[0]);
+});
+
+function toonKetting(lijsten,vervang){
+  const doel=el('kettingen');
+  if(vervang) doel.innerHTML='';
+  lijsten.forEach(rij=>{
+    const d=document.createElement('div'); d.className='ketting';
+    rij.forEach(w=>{
+      const b=document.createElement('button'); b.textContent=w;
+      b.addEventListener('click',()=>bouwWoord(w));
+      d.appendChild(b);
+    });
+    doel.appendChild(d);
+  });
+}
+toonKetting(KETTINGEN,true);
+bouwWoord('huis');
+
+/* ============================================================
+   Herhaald lezen
+   ============================================================ */
+let t0=null, tick=null, metingen=[], pogingen={};
+function toonKlok(s){ el('klok').textContent = s.toFixed(1).replace('.',',')+' s'; }
+el('klokStart').addEventListener('click',()=>{
+  t0=performance.now();
+  if(tick) clearInterval(tick);
+  tick=setInterval(()=>toonKlok((performance.now()-t0)/1000),100);
+});
+el('klokStop').addEventListener('click',()=>{
+  if(t0===null) return;
+  const s=(performance.now()-t0)/1000;
+  clearInterval(tick); tick=null; toonKlok(s); t0=null;
+  const naam=(el('naam').value.trim()||'—');
+  const tot=+el('aantalWoorden').value, f=+el('fouten3').value;
+  pogingen[naam]=(pogingen[naam]||0)+1;
+  const wpm=Math.round(((tot-f)/s)*60);
+  metingen.push({naam,poging:pogingen[naam],s,wpm});
+  el('fouten3').value=0;
+  tekenTabel();
+});
+el('klokWis').addEventListener('click',()=>{metingen=[];pogingen={};tekenTabel();});
+function tekenTabel(){
+  const tb=el('tabel');
+  if(!metingen.length){ tb.innerHTML='<tr><td colspan="5" class="meta">Nog geen metingen.</td></tr>'; return; }
+  const max=Math.max(...metingen.map(m=>m.wpm),1);
+  tb.innerHTML='';
+  metingen.forEach(m=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${m.naam}</td><td>${m.poging}</td><td>${m.s.toFixed(1).replace('.',',')} s</td>`+
+      `<td><b>${m.wpm}</b></td><td><div class="balk" style="width:${Math.round(m.wpm/max*100)}%"></div></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+laadLijst();
+</script>
+</body>
+</html>
