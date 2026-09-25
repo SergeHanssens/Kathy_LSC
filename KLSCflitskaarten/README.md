@@ -103,6 +103,7 @@ De 48 klanken van de klank-tekenkaart, elk in zijn eigen kleur.
 - *Raad de kleur*: de klank verschijnt grijs, de leerlingen zeggen de kleur, één tik toont het antwoord
 - volgorde wordt elke ronde opnieuw geschud, zonder dat dezelfde klank twee keer na elkaar komt
 - automatisch doorbladeren van 1 tot 8 seconden
+- *Voorlezen na … s*: de klank verschijnt, na het gekozen aantal seconden (1 tot 15) wordt hij voorgelezen (met het steunwoord als dat aan staat), en daarna komt vanzelf de volgende klank. In *Raad de kleur* wordt de kleur getoond op het moment van voorlezen. Gebruikt de spraak van de browser zelf; staat er op het toestel geen Nederlandse stem, dan leest hij met de standaardstem. Een klank lezen is voor een computerstem moeilijk: korte klinkers en medeklinkers klinken vaak als de lettername, het steunwoord maakt het duidelijk.
 
 ### apps/leestempo
 

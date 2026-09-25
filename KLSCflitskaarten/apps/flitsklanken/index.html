@@ -43,6 +43,8 @@ select {
 }
 input[type=range] { width: 110px; vertical-align: middle; }
 .lbl { font-size: 12px; color: #9ab2c1; font-weight: bold; }
+.vink { display: inline-block; padding: 6px 4px; cursor: pointer; }
+.vink input { width: 22px; height: 22px; vertical-align: middle; margin: 0 6px 0 0; }
 .rek { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; }
 #teller { font-size: 14px; color: #9ab2c1; font-weight: bold; }
 
@@ -186,6 +188,16 @@ input[type=range] { width: 110px; vertical-align: middle; }
   <button class="knop" id="auto">uit</button>
   <input type="range" id="tempo" min="1" max="8" step="1" value="3">
   <span class="lbl" id="tempoUit">3 s</span>
+  <span id="leesvak">
+  <label class="lbl vink"><input type="checkbox" id="lezen">Voorlezen na</label>
+  <select id="leesWacht">
+    <option value="1">1 s</option><option value="2">2 s</option>
+    <option value="3" selected>3 s</option><option value="4">4 s</option>
+    <option value="5">5 s</option><option value="6">6 s</option>
+    <option value="8">8 s</option><option value="10">10 s</option>
+    <option value="15">15 s</option>
+  </select>
+  </span>
   </div>
   <span class="rek"></span>
   <span id="teller">0 / 0</span>
@@ -265,9 +277,9 @@ var K = [
   { t: "ieuw", k: "wit", w: "nieuw", g: "Klankgroepen", m: "stip" },
   { t: "uw", k: "wit", w: "duw", g: "Klankgroepen", m: "stip" },
 
-  { t: "e", k: "oranje", w: "lopen", g: "Doffe klanken" },
-  { t: "ig", k: "oranje", w: "grappig", g: "Doffe klanken" },
-  { t: "lijk", k: "oranje", w: "vrolijk", g: "Doffe klanken" },
+  { t: "e", k: "oranje", w: "lopen", g: "Doffe klanken", u: "uh" },
+  { t: "ig", k: "oranje", w: "grappig", g: "Doffe klanken", u: "ug" },
+  { t: "lijk", k: "oranje", w: "vrolijk", g: "Doffe klanken", u: "luk" },
 
   { t: "b", k: "blauw", w: "bal", g: "Medeklinkers" },
   { t: "d", k: "blauw", w: "dak", g: "Medeklinkers" },
@@ -325,6 +337,7 @@ function aan(node, ja) { if (ja) { node.className = node.className.indexOf("aan"
 var lijst = [], pos = 0, ronde = 1;
 var mengen = true, raden = false, steunAan = true, onthuld = true;
 var weergave = "letters", autoAan = false, timer = null;
+var leesAan = false, leesTimer = null, leesRonde = 0, stilTonen = false;
 
 /* ---------- reeksen ---------- */
 for (var r = 0; r < REEKSEN.length; r++) {
@@ -439,6 +452,8 @@ function toon() {
   el("hint").innerHTML = raden
     ? (onthuld ? "Tik voor de volgende klank" : "Welke kleur? Tik om te tonen")
     : "Tik op het scherm, of gebruik de pijltjes";
+
+  if (!stilTonen) { planLezen(); }
 }
 
 function volgende() {
@@ -500,11 +515,16 @@ el("tempo").oninput = el("tempo").onchange = function () {
   el("tempoUit").innerHTML = el("tempo").value + " s";
   if (autoAan) { startAuto(); }
 };
-el("auto").onclick = function () {
-  autoAan = !autoAan;
-  aan(this, autoAan);
-  this.innerHTML = autoAan ? "aan" : "uit";
+function zetAuto(ja) {
+  autoAan = ja;
+  aan(el("auto"), autoAan);
+  el("auto").innerHTML = autoAan ? "aan" : "uit";
   if (autoAan) { startAuto(); } else { stopAuto(); }
+}
+el("auto").onclick = function () {
+  /* Auto en voorlezen bladeren allebei door; er mag er maar één tegelijk aan staan. */
+  if (!autoAan && leesAan) { el("lezen").checked = false; zetLezen(false); }
+  zetAuto(!autoAan);
 };
 function startAuto() {
   stopAuto();
@@ -517,6 +537,94 @@ function startAuto() {
   }, raden ? ms / 2 : ms);
 }
 function stopAuto() { if (timer) { clearInterval(timer); timer = null; } }
+
+/* ---------- voorlezen ----------
+   Toon de klank, wacht het gekozen aantal seconden, lees hem voor
+   en ga daarna vanzelf naar de volgende. Gebruikt de spraak die in de
+   browser zit, dus ook zonder internet (als het toestel een Nederlandse stem heeft). */
+var spraak = window.speechSynthesis || null;
+var stem = null;
+function kiesStem() {
+  if (!spraak) { return; }
+  var stemmen = spraak.getVoices(), voorkeur = ["nl-BE", "nl_BE", "nl-NL", "nl_NL"];
+  stem = null;
+  for (var v = 0; v < voorkeur.length && !stem; v++) {
+    for (var s = 0; s < stemmen.length; s++) {
+      if (stemmen[s].lang === voorkeur[v]) { stem = stemmen[s]; break; }
+    }
+  }
+  for (var s2 = 0; s2 < stemmen.length && !stem; s2++) {
+    if (stemmen[s2].lang && stemmen[s2].lang.toLowerCase().indexOf("nl") === 0) { stem = stemmen[s2]; }
+  }
+}
+if (spraak) {
+  kiesStem();
+  if ("onvoiceschanged" in spraak) { spraak.onvoiceschanged = kiesStem; }
+} else {
+  el("leesvak").style.display = "none";
+}
+
+function leesTekst(k) {
+  var klank = k.u || k.t;
+  var woord = k.w.replace(/\s*\(.*\)/, "");
+  return steunAan ? klank + ". " + woord : klank;
+}
+
+function spreek(tekst, klaar) {
+  var gedaan = false;
+  function einde() { if (!gedaan) { gedaan = true; klaar(); } }
+  var u = new SpeechSynthesisUtterance(tekst);
+  if (stem) { u.voice = stem; u.lang = stem.lang; } else { u.lang = "nl-BE"; }
+  u.rate = 0.8;
+  u.onend = einde;
+  u.onerror = einde;
+  spraak.cancel();
+  spraak.speak(u);
+  /* Sommige browsers melden het einde van de spraak nooit.
+     Dan gaan we na een ruime tijd toch verder, zodat de reeks niet vastloopt. */
+  setTimeout(einde, 6000);
+}
+
+function stopLezen() {
+  leesRonde++;
+  if (leesTimer) { clearTimeout(leesTimer); leesTimer = null; }
+  if (spraak) { spraak.cancel(); }
+}
+
+function planLezen() {
+  stopLezen();
+  if (!leesAan || !spraak || !lijst.length) { return; }
+  if (el("paneel").className.indexOf("open") >= 0) { return; }
+  var mijn = leesRonde;
+  var wacht = parseInt(el("leesWacht").value, 10) * 1000;
+  leesTimer = setTimeout(function () {
+    if (mijn !== leesRonde) { return; }
+    if (raden && !onthuld) { onthuld = true; stilTonen = true; toon(); stilTonen = false; }
+    spreek(leesTekst(K[lijst[pos]]), function () {
+      if (mijn !== leesRonde) { return; }
+      leesTimer = setTimeout(function () {
+        if (mijn === leesRonde) { stap(); }
+      }, 1200);
+    });
+  }, wacht);
+}
+
+function zetLezen(ja) {
+  leesAan = ja;
+  if (leesAan) {
+    if (autoAan) { zetAuto(false); }
+    /* iPad en iPhone laten pas spraak toe na een tik; dit stille zinnetje
+       ontgrendelt de spraak meteen bij het aanvinken. */
+    var stil = new SpeechSynthesisUtterance(" ");
+    stil.volume = 0;
+    spraak.speak(stil);
+    planLezen();
+  } else {
+    stopLezen();
+  }
+}
+el("lezen").onchange = function () { zetLezen(el("lezen").checked); };
+el("leesWacht").onchange = function () { if (leesAan) { planLezen(); } };
 
 /* Volledig scherm bestaat niet op iPhone en op oudere iPads.
    De knop verdwijnt dan, in plaats van niets te doen. */
@@ -592,7 +700,7 @@ function paneelBij() {
     aan(knoppen[i3], keuze.indexOf(parseInt(knoppen[i3].getAttribute("data-i"), 10)) >= 0);
   }
 }
-el("kies").onclick = function () { el("paneel").className = "open"; };
+el("kies").onclick = function () { el("paneel").className = "open"; stopLezen(); };
 el("sluit").onclick = function () {
   el("paneel").className = "";
   el("set").value = REEKSEN.length - 1;
