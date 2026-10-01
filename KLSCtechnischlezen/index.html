@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Technisch lezen — oefenpakket</title>
+<style>
+  :root{
+    --bg:#f4f1ea; --card:#fff; --ink:#22262e; --muted:#6b7280;
+    --line:#ddd8cc; --accent:#3d6b8f; --ok:#2f7d4f; --ok-soft:#dff0e4;
+    --no:#a8443c; --no-soft:#f7dedb; --shadow:0 1px 3px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif; font-size:18px; line-height:1.6}
+  .wrap{max-width:880px; margin:0 auto; padding:20px 16px 60px}
+  h1{font-size:26px; margin:0 0 4px}
+  .sub{color:var(--muted); font-size:15px; margin:0 0 20px}
+
+  /* ---- menu ---- */
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(235px,1fr)); gap:14px}
+  .tile{background:var(--card); border:2px solid var(--line); border-radius:14px;
+    padding:20px 18px; cursor:pointer; text-align:left; font:inherit; color:inherit; box-shadow:var(--shadow)}
+  .tile:hover,.tile:focus{border-color:var(--accent); outline:none}
+  .tile .ic{font-size:36px; line-height:1; display:block; margin-bottom:6px}
+  .tile b{font-size:19px; display:block}
+  .tile small{color:var(--muted); font-size:14px}
+  h2.groepkop{font-size:16px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--muted); margin:26px 0 12px; font-weight:600}
+  h2.groepkop:first-of-type{margin-top:4px}
+
+  /* ---- balk ---- */
+  .topbar{display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap}
+  .back,.mini{background:#fff; border:2px solid var(--line); border-radius:10px;
+    padding:8px 14px; font:inherit; font-size:15px; cursor:pointer; color:var(--muted)}
+  .back:hover,.mini:hover{border-color:var(--accent); color:var(--accent)}
+  .dots{display:flex; gap:5px; margin-left:auto}
+  .dot{width:11px; height:11px; border-radius:50%; background:#ddd8cc}
+  .dot.done{background:var(--ok)} .dot.mis{background:var(--no)} .dot.now{background:var(--accent); transform:scale(1.35)}
+
+  /* ---- speelveld ---- */
+  .stage{background:var(--card); border:2px solid var(--line); border-radius:16px;
+    padding:24px 20px; box-shadow:var(--shadow); text-align:center}
+  .opdracht{font-size:17px; color:var(--muted); margin:0 0 16px}
+  .luister{background:var(--accent); color:#fff; border:none; border-radius:50%;
+    width:52px; height:52px; font-size:24px; cursor:pointer; margin:0 auto 16px; display:block}
+  .luister:active{transform:scale(.94)}
+
+  .flits{font-size:50px; font-weight:700; min-height:88px; font-family:Georgia,serif;
+    display:flex; align-items:center; justify-content:center}
+  .flitszin{font-size:28px; font-weight:600; min-height:96px; font-family:Georgia,serif;
+    line-height:1.5; display:flex; align-items:center; justify-content:center; max-width:640px; margin:0 auto}
+  .leeg::after{content:"• • •"; color:#cfc9bb; font-size:30px; letter-spacing:.2em}
+  .zin{font-family:Georgia,serif; font-size:27px; line-height:1.75; max-width:640px;
+    margin:0 auto 20px}
+  .gat{display:inline-block; min-width:92px; border-bottom:4px solid var(--accent); vertical-align:bottom}
+
+  .opties{display:grid; grid-template-columns:repeat(2,1fr); gap:12px; max-width:540px; margin:0 auto}
+  .opties.breed{grid-template-columns:1fr; max-width:600px}
+  .opt{background:#fbfaf7; border:3px solid var(--line); border-radius:12px;
+    padding:15px 10px; font:inherit; font-family:Georgia,serif; font-size:25px; font-weight:600;
+    cursor:pointer; color:inherit}
+  .opties.breed .opt{font-size:21px; text-align:left; padding:14px 16px; line-height:1.45}
+  .opt:hover:not(:disabled){border-color:var(--accent)}
+  .opt:disabled{cursor:default}
+  .opt.goed{background:var(--ok-soft); border-color:var(--ok); color:var(--ok)}
+  .opt.fout{background:var(--no-soft); border-color:var(--no); color:var(--no)}
+  .fb{min-height:40px; margin-top:14px; font-size:20px; font-weight:600}
+  .fb.goed{color:var(--ok)} .fb.fout{color:var(--no)}
+  /* bij een fout stopt de app en wacht ze tot hij zelf verder klikt */
+  .correctie{background:var(--ok-soft); border:2px solid var(--ok); border-radius:12px;
+    padding:16px; margin:16px auto 0; max-width:600px}
+  .corrtekst{font-family:Georgia,serif; font-size:21px; color:var(--ok);
+    margin:0 0 12px; line-height:1.5}
+
+  /* ---- hardop lezen ---- */
+  .leeszin{font-family:Georgia,serif; font-size:30px; line-height:1.7; max-width:640px;
+    margin:0 auto 22px; min-height:110px; display:flex; align-items:center; justify-content:center}
+  .zelf{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:6px}
+  .zelf button{border:3px solid var(--line); background:#fff; border-radius:12px;
+    padding:14px 22px; font:inherit; font-size:18px; cursor:pointer}
+  .zelf button.vlot{border-color:var(--ok); color:var(--ok)}
+  .zelf button.moeilijk{border-color:var(--no); color:var(--no)}
+
+  .uitleg{background:#eef3f7; border:2px dashed var(--accent); border-radius:12px;
+    padding:14px 16px; margin-bottom:18px; text-align:left; font-size:16px}
+  .uitleg b{color:var(--accent)}
+
+  /* ---- correctiesleutel ---- */
+  .sleutel{background:var(--card); border:2px solid var(--line); border-radius:14px;
+    padding:20px; box-shadow:var(--shadow)}
+  table.nk{width:100%; border-collapse:collapse; font-size:16px}
+  table.nk th{text-align:left; color:var(--muted); font-size:14px; font-weight:600;
+    border-bottom:2px solid var(--line); padding:8px 6px}
+  table.nk td{border-bottom:1px solid var(--line); padding:9px 6px; vertical-align:top}
+  table.nk td.v{font-family:Georgia,serif}
+  .hoor{background:#fff; border:2px solid var(--line); border-radius:9px;
+    width:40px; height:36px; font-size:17px; cursor:pointer; line-height:1}
+  .hoor:hover{border-color:var(--accent)}
+  .hoor.nodig{background:var(--no-soft); border-color:var(--no)}
+  .merk{font-weight:700; font-size:19px}
+  .merk.j{color:var(--ok)} .merk.f{color:var(--no)}
+  .was{color:var(--no); text-decoration:line-through}
+  .moest{color:var(--ok); font-weight:600}
+  .samenvat{font-size:19px; font-weight:600; margin:0 0 14px}
+
+  .knop{background:var(--accent); color:#fff; border:none; border-radius:12px;
+    padding:13px 24px; font:inherit; font-size:18px; cursor:pointer; margin:6px 6px 0 0}
+  .knop.grijs{background:#fff; color:var(--muted); border:2px solid var(--line)}
+  details.beg{margin-top:30px; font-size:15px; color:var(--muted)}
+  details.beg summary{cursor:pointer; padding:8px 0}
+  .log{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px}
+  .hide{display:none}
+
+  @media print{
+    body{background:#fff; font-size:12pt}
+    .topbar,.knop,details.beg,.uitleg,.hoor{display:none !important}
+    .sleutel{border:none; box-shadow:none; padding:0}
+    table.nk{font-size:11pt}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= MENU ================= -->
+  <div id="menu">
+    <h1>Technisch lezen</h1>
+    <p class="sub">Elke oefening kijkt zichzelf na. Achteraf staat alles op de correctiesleutel.</p>
+
+    <h2 class="groepkop">Woordniveau</h2>
+    <div class="grid" id="tiles-woord"></div>
+    <h2 class="groepkop">Zinsniveau</h2>
+    <div class="grid" id="tiles-zin"></div>
+    <h2 class="groepkop">Nakijken</h2>
+    <div class="grid">
+      <button class="tile" id="naarsleutel"><span class="ic">🔑</span><b>Correctiesleutel</b>
+        <small>Alles wat je deze sessie geoefend hebt</small></button>
+    </div>
+
+    <details class="beg">
+      <summary>Voor de begeleider</summary>
+      <div class="log">
+        <p style="margin-top:0"><b>Wat dit pakket traint.</b> Decoderen: sneller en nauwkeuriger woorden en zinnen
+        herkennen. Het traint géén begrijpend lezen — dat is een aparte vaardigheid die niet vanzelf meegroeit.</p>
+        <p><b>Zelfstandig werken.</b> Elke oefening geeft meteen aan of het antwoord klopt, spreekt het juiste
+        antwoord uit, en zet het op de correctiesleutel. Er hoeft niemand mee te kijken.</p>
+        <p><b>Opbouw van een sessie</b> (± 15 min): één woordoefening als opwarming, dan één zinsoefening,
+        dan Hardop lezen. Drie à vier keer per week.</p>
+        <p style="margin-bottom:0"><b>De correctiesleutel</b> blijft bewaard zolang de pagina openstaat en kan
+        afgedrukt worden. Noteer wat je wil bijhouden vóór je afsluit.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- ================= OEFENING ================= -->
+  <div id="oefening" class="hide">
+    <div class="topbar">
+      <button class="back" id="terug">← Terug</button>
+      <button class="mini" id="tempoknop"></button>
+      <div class="dots" id="dots"></div>
+    </div>
+    <div class="uitleg" id="uitleg"></div>
+    <div class="stage">
+      <p class="opdracht" id="opdracht"></p>
+      <button class="luister" id="luisterknop" title="Lees de opdracht nog eens voor">🔊</button>
+      <div id="vak"></div>
+      <div class="opties" id="opties"></div>
+      <div class="fb" id="feedback"></div>
+      <div id="correctievak" class="correctie hide">
+        <p class="corrtekst" id="corrtekst"></p>
+        <button class="knop grijs" id="nogeens">🔊 Nog eens horen</button>
+        <button class="knop" id="verder">Volgende →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= HARDOP LEZEN ================= -->
+  <div id="hardop" class="hide">
+    <div class="topbar">
+      <button class="back" id="terug3">← Terug</button>
+      <button class="mini" id="anderetekst">Andere tekst</button>
+      <div class="dots" id="dots3"></div>
+    </div>
+    <div class="uitleg">
+      <b>Hardop lezen in drie stappen.</b> 1. Lees de zin hardop voor jezelf.
+      2. Tik op 🔊 en luister hoe het klinkt. 3. Ging het vlot, of was het moeilijk? Kies zelf.
+      Zo controleer je jezelf zonder dat er iemand moet meeluisteren.
+    </div>
+    <div class="stage">
+      <p class="opdracht" id="hoptitel"></p>
+      <div class="leeszin" id="hopzin"></div>
+      <button class="luister" id="hopluister">🔊</button>
+      <div class="zelf">
+        <button class="vlot" id="hopvlot">✓ Ging vlot</button>
+        <button class="moeilijk" id="hopmoeilijk">↻ Was moeilijk</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= EINDE RONDE ================= -->
+  <div id="einde" class="hide">
+    <div class="sleutel">
+      <div class="topbar"><button class="back" id="terug2">← Terug naar menu</button></div>
+      <p class="samenvat" id="eindscore"></p>
+      <button class="knop" id="hoorfouten">🔊 Luister naar je fouten</button>
+      <table class="nk" id="eindtabel"></table>
+      <button class="knop" id="opnieuw">Nog eens oefenen</button>
+      <button class="knop grijs" id="naarmenu2">Andere oefening</button>
+    </div>
+  </div>
+
+  <!-- ================= CORRECTIESLEUTEL ================= -->
+  <div id="sleutel" class="hide">
+    <div class="topbar">
+      <button class="back" id="terug4">← Terug</button>
+      <button class="mini" id="hoorfouten2">🔊 Luister naar je fouten</button>
+      <button class="mini" id="printknop">🖨 Afdrukken</button>
+      <button class="mini" id="wisknop">Wissen</button>
+    </div>
+    <div class="sleutel">
+      <h1 style="font-size:22px;margin:0 0 4px">Correctiesleutel</h1>
+      <p class="sub" id="sleuteldatum"></p>
+      <div id="sleutelinhoud"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =====================================================================
+   TECHNISCH LEZEN — zelfstandig oefenpakket
+   Woordniveau + zinsniveau. Elke oefening kijkt zichzelf na en schrijft
+   het resultaat naar de correctiesleutel.
+   Werkt offline, geen installatie, geen account.
+   ===================================================================== */
+
+const el = id => document.getElementById(id);
+const rnd = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const shuffle = a => a.sort(()=>Math.random()-.5);
+const kiesN = (l,n) => shuffle([...l]).slice(0,n);
+
+/* Trekken zonder teruglegging: binnen één ronde komt niets twee keer terug.
+   Pas als de hele lijst op is, wordt er opnieuw geschud. */
+const bakken = {};
+function trek(naam, lijst){
+  let b = bakken[naam];
+  if(!b || !b.rest.length){ b = bakken[naam] = { rest: shuffle([...lijst.keys()]) }; }
+  return lijst[b.rest.pop()];
+}
+function legTerug(){ Object.keys(bakken).forEach(k=>delete bakken[k]); }
+
+/* ---------- voorlezen ----------
+   De opdracht wordt voorgelezen, het doelwoord nooit vooraf: anders valt
+   er niets meer te decoderen. Het juiste antwoord klinkt pas na het antwoord. */
+let stem = null;
+const heeftSpraak = (typeof speechSynthesis !== 'undefined');
+function kiesStem(){
+  if(!heeftSpraak) return;
+  const v = speechSynthesis.getVoices();
+  stem = v.find(x=>x.lang==='nl-BE') || v.find(x=>x.lang && x.lang.startsWith('nl')) || null;
+}
+kiesStem();
+if(heeftSpraak) speechSynthesis.onvoiceschanged = kiesStem;
+function zeg(t, traag){
+  if(!heeftSpraak || !t) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang='nl-BE'; u.rate = traag ? .75 : .9;
+    if(stem) u.voice = stem;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* =====================================================================
+   MATERIAAL
+   ===================================================================== */
+
+/* --- woorden met lettergreepverdeling (AVI M4-M5) --- */
+const WOORDEN = [
+ 'ka-mer','bak-ker','ta-fel','win-kel','zo-mer','vin-ger','moe-der','bo-ter','wa-ter',
+ 'slaap-ka-mer','voet-bal','school-bord','fiet-sen','lo-pen','brie-ven','ver-haal','ver-trek',
+ 'ont-dek-ken','be-gin-nen','ge-zel-lig','moei-lijk','vro-lijk','kleu-rig','vei-lig',
+ 'po-li-tie','va-kan-tie','o-li-fant','com-pu-ter','gi-taar','ka-naal','to-maat',
+ 'ba-naan','sa-la-de','spie-gel','sprook-je','schaat-sen','schat-ten','meeu-wen',
+ 'kno-pen','stran-den','ster-ren','bloe-men','vo-gels','die-ren','jon-gen','meis-je',
+ 'broer-tje','zus-je','huis-je','bo-men','han-den','voe-ten','o-ren',
+ 'stoe-len','kas-ten','ra-men','deu-ren','trap-pen','stra-ten','win-kels',
+ 'bak-ke-rij','zwem-bad','speel-tuin','die-ren-tuin','ver-jaar-dag',
+ 'pa-ra-plu','te-le-foon','cho-co-la-de','to-ve-naar','prin-ses','ko-nin-gin',
+ 'rid-der','kas-teel','dra-ken','to-ren','zol-der','kel-der','keu-ken',
+ 'wol-ken','don-der','blik-sem','re-gen','win-ter','len-te','vlin-der',
+ 'ko-nijn','werk-blad','rug-zak','ver-stop-pen','spring-touw','och-tend'
+];
+const heel = w => w.replace(/-/g,'');
+
+const KLINKERS = 'aeiou';
+function varianten(w){
+  const uit = new Set();
+  for(let i=0;i<w.length-1;i++) if(w[i]!==w[i+1]) uit.add(w.slice(0,i)+w[i+1]+w[i]+w.slice(i+2));
+  for(let i=1;i<w.length-1;i++) uit.add(w.slice(0,i)+w.slice(i+1));
+  for(let i=0;i<w.length;i++) if(KLINKERS.includes(w[i]))
+    for(const k of KLINKERS) if(k!==w[i]) uit.add(w.slice(0,i)+k+w.slice(i+1));
+  uit.delete(w);
+  const echte = new Set(WOORDEN.map(heel));
+  return [...uit].filter(v => v.length>2 && !echte.has(v));
+}
+
+/* --- zinnen met een gat: [zin voor, juist woord, zin na, 3 lijkende woorden] --- */
+const GATEN = [
+ ['De vogel vliegt naar zijn','nest','in de boom.',['net','mest','rest']],
+ ['Papa pompt de band van de','fiets','op.',['fluit','flits','fles']],
+ ['Ik zoek mijn naam op de','lijst','aan de muur.',['kist','mist','list']],
+ ['De bakker haalt het verse','brood','uit de oven.',['bord','boek','been']],
+ ['Oma zet haar','bril','op om de krant te lezen.',['bal','bus','brug']],
+ ['De hond kwispelt met zijn','staart','als hij blij is.',['straat','stoel','ster']],
+ ['De trein stopt aan het','station','van de stad.',['stadion','stuur','strand']],
+ ['Je wast je handen met water en','zeep','.',['zeef','zaag','zaad']],
+ ['De leraar schrijft op het','bord','voor de klas.',['brood','bos','bed']],
+ ["'s Avonds doe ik het",'licht','aan want het wordt donker.',['lucht','liedje','luik']],
+ ['De kat klimt in de','boom','en durft niet meer naar beneden.',['bloem','boot','bank']],
+ ['Voor het slapen poets ik mijn','tanden','.',['tenen','tafels','tassen']],
+ ['De postbode brengt een','brief','in de bus.',['broek','bril','bank']],
+ ['De regen valt op het','dak','van het huis.',['bad','pad','rad']],
+ ['In de klas zit ik op een','stoel','naast het raam.',['sleutel','steen','ster']],
+ ['De kok roert in de','pan','op het vuur.',['pen','pop','put']],
+ ['Met een schaar knip ik het','touw','door.',['toren','tent','taart']],
+ ['Ik plak de foto in mijn','album','.',['avond','anker','adres']],
+ ['De dokter luistert naar mijn','hart','met een toestel.',['haar','hoed','hok']],
+ ['In de winter trek ik warme','handschoenen','aan.',['hagelslag','hamers','hekken']],
+ ['De boer melkt elke dag zijn','koeien','.',['keuken','kussen','kabels']],
+ ['Mijn fiets staat in de','garage','naast de auto.',['gordijn','gitaar','galerij']],
+ ['Zij blaast de kaarsjes op de','taart','uit.',['tent','toren','trap']],
+ ['De wind blaast door de','bomen','in het park.',['bonen','botten','borden']],
+ ['Ik schrijf het antwoord in mijn','schrift','.',['schrik','schip','schift']],
+ ['De kapper knipt mijn','haren','veel te kort.',['halen','haven','harten']],
+ ['Op de kermis rijd ik met de','botsauto','.',['boodschap','boterham','borstel']],
+ ['De brandweer blust het','vuur','in het huis.',['vuil','veer','voer']],
+ ['Mama snijdt de','appel','in vier stukken.',['ampel','adem','anker']],
+ ['De sleutel past niet in het','slot','van de deur.',['slop','sloot','vlot']]
+];
+
+/* --- klopt-of-niet zinnen --- */
+const KLOPT = [
+ ['Een hond heeft vier poten.',true],
+ ['De zon komt op in het oosten.',true],
+ ['IJs smelt in de warme zon.',true],
+ ['Een fiets heeft twee wielen.',true],
+ ['Vogels bouwen een nest in een boom.',true],
+ ['In de winter valt er soms sneeuw.',true],
+ ['Een bakker maakt brood en koeken.',true],
+ ['Je schrijft met een pen op papier.',true],
+ ['Een vis leeft in het water.',true],
+ ['Melk komt van een koe.',true],
+ ['Een week heeft zeven dagen.',true],
+ ['Een appel groeit aan een boom.',true],
+ ['Met een sleutel open je een slot.',true],
+ ['Een olifant is groter dan een muis.',true],
+ ['Suiker smaakt zoet.',true],
+ ['Je draagt schoenen aan je voeten.',true],
+ ['Een dokter helpt zieke mensen.',true],
+ ['In de bibliotheek vind je boeken.',true],
+ ['De maan zie je meestal bij nacht.',true],
+ ['Een paraplu gebruik je als het regent.',true],
+ ['Een kat kan hoog in de lucht vliegen.',false],
+ ['De zee is helemaal gemaakt van zand.',false],
+ ['Een stoel heeft tien poten.',false],
+ ['Je eet soep met een vork.',false],
+ ['Een auto rijdt gewoon over het water.',false],
+ ['Een vogel heeft vier vleugels.',false],
+ ['Brood wordt gebakken van zand.',false],
+ ['Een slang heeft lange poten.',false],
+ ['Je drinkt melk uit een bord.',false],
+ ['Papier is zwaarder dan een steen.',false],
+ ['Een muis is groter dan een paard.',false],
+ ['Je knipt je nagels met een lepel.',false],
+ ['Vissen leven in de droge woestijn.',false],
+ ['Een week heeft twintig dagen.',false],
+ ['Melk is helemaal zwart van kleur.',false],
+ ['Bananen zijn fel blauw van kleur.',false],
+ ['Een fiets heeft acht wielen nodig.',false],
+ ['De zon schijnt het felst om middernacht.',false],
+ ['Een boom groeit onder de grond.',false],
+ ['Je poetst je tanden met zeep.',false]
+];
+
+/* --- korte teksten voor hardop lezen (AVI M5) --- */
+const TEKSTEN = [
+ { titel:'De sleutel op zolder', zinnen:[
+   'Op zolder stond een oude kast.',
+   'De deur klemde een beetje.',
+   'Sam trok hard en de kast schoot open.',
+   'Binnen lag een doos met een roestige sleutel.',
+   'Welke deur hoorde daarbij?',
+   'Sam liep de hele zolder rond.',
+   'Pas onder de trap zag hij een klein deurtje.',
+   'De sleutel draaide zonder moeite.']},
+ { titel:'Storm aan zee', zinnen:[
+   'De wolken werden donker boven het strand.',
+   'De meeuwen vlogen laag over het water.',
+   'Mila trok haar jas dicht en liep naar de dijk.',
+   'Het zand prikte in haar gezicht.',
+   'Na een paar minuten begon het te regenen.',
+   'Grote druppels sloegen op de golven.',
+   'Thuis stond haar moeder al te wachten.',
+   'Van achter het raam leek de storm veel minder eng.']},
+ { titel:'De wedstrijd', zinnen:[
+   'Nog tien minuten te spelen en de stand was gelijk.',
+   'Youssef wachtte aan de zijlijn tot hij mocht invallen.',
+   'Zijn benen trilden een beetje.',
+   'Toen de trainer zijn naam riep, rende hij het veld op.',
+   'De bal kwam snel zijn kant op.',
+   'Hij keek op en zag de ruimte.',
+   'De keeper dook, maar kon er net niet bij.',
+   'Zijn ploeg sprong juichend op hem af.']},
+ { titel:'Een vreemd pakje', zinnen:[
+   'De postbode belde twee keer aan.',
+   'Op de mat lag een pakje zonder naam.',
+   'Alleen een nummer stond op de zijkant.',
+   'Nora schudde het voorzichtig heen en weer.',
+   'Er zat iets hards in.',
+   'Haar vader vond dat ze moest wachten tot morgen.',
+   'Maar de nieuwsgierigheid won het van het geduld.',
+   'Onder het papier zat een houten doosje met een slotje.']}
+];
+
+/* ---------- tempo voor de flitsoefeningen ---------- */
+const TEMPO_WOORD = [['Langzaam',1200],['Gewoon',750],['Snel',450]];
+const TEMPO_ZIN   = [['Langzaam',4000],['Gewoon',2600],['Snel',1700]];
+let tempoIdx = 1;
+function tekenTempo(){ el('tempoknop').textContent = '⏱ ' + TEMPO_WOORD[tempoIdx][0]; }
+el('tempoknop').onclick = ()=>{ tempoIdx = (tempoIdx+1)%3; tekenTempo(); };
+tekenTempo();
+
+/* =====================================================================
+   DE OEFENINGEN
+   Elke maak() levert: {toon, opdracht, spreekOpdracht, opties, juist,
+                        breed?, flitsTijd?, sleutelVraag}
+   ===================================================================== */
+
+const BLOKKEN = {
+
+  /* ---------------- WOORDNIVEAU ---------------- */
+
+  flits: {
+    groep:'woord', naam:'Flitswoorden', icoon:'⚡',
+    tip:'Het woord verschijnt even. Welk woord was het?',
+    uitleg:'<b>Flitswoorden.</b> Het woord is kort zichtbaar en verdwijnt dan. Zo leer je een woord in één oogopslag herkennen in plaats van het letter voor letter te ontcijferen.',
+    maak(){
+      const w = heel(trek('woord', WOORDEN));
+      return {
+        flits: w, flitsTijd: TEMPO_WOORD[tempoIdx][1],
+        opdracht:'Kijk goed...', naOpdracht:'Welk woord was het?',
+        spreekOpdracht:'Kijk goed naar het woord.',
+        opties: shuffle([w, ...kiesN(varianten(w),3)]),
+        juist: w, sleutelVraag: w,
+        zegKort: w, zegGoed: w,
+        zegFout: g => 'Jij koos ' + g + '. Maar er stond: ' + w + '.'
+      };
+    }
+  },
+
+  hakken: {
+    groep:'woord', naam:'Lettergrepen', icoon:'✂️',
+    tip:'Hak het woord in de juiste stukken',
+    uitleg:'<b>Lettergrepen.</b> Lange woorden lees je vlotter als je ze in stukken hakt. Kies de verdeling die klopt.',
+    maak(){
+      const w = trek('woord', WOORDEN);
+      const vol = heel(w), n = w.split('-').length;
+      const juist = w.replace(/-/g,' - ');
+      // verkeerde verdelingen: zelfde aantal stukken, en bij korte woorden
+      // ook één stuk meer of minder, zodat er altijd vier keuzes zijn
+      const fout = new Set();
+      const maakSplitsing = aantal => {
+        if(aantal < 2 || aantal > vol.length) return null;
+        const punten = new Set();
+        let pogingen = 0;
+        while(punten.size < aantal-1 && pogingen++ < 40) punten.add(rnd(1,vol.length-1));
+        if(punten.size < aantal-1) return null;
+        const lijst = [...punten].sort((a,b)=>a-b);
+        let stuk=[], vorig=0;
+        lijst.forEach(i=>{ stuk.push(vol.slice(vorig,i)); vorig=i; });
+        stuk.push(vol.slice(vorig));
+        if(stuk.some(s=>!s.length)) return null;
+        return stuk.join(' - ');
+      };
+      for(const aantal of [n, n, n, n+1, n-1, n+1, n-1]){
+        for(let p=0;p<25 && fout.size<3;p++){
+          const k = maakSplitsing(aantal);
+          if(k && k !== juist) fout.add(k);
+        }
+        if(fout.size >= 3) break;
+      }
+      // de juiste verdeling klinkt als losse stukjes, met pauzes ertussen
+      const hoorbaar = w.split('-').join(', ') + '. Samen: ' + vol + '.';
+      return {
+        toonWoord: vol, opdracht:'Welke verdeling klopt?',
+        spreekOpdracht:'Hak het woord in stukken. Welke verdeling klopt?',
+        opties: shuffle([juist, ...kiesN(fout,3)]),
+        juist, sleutelVraag: vol,
+        zegKort: w.split('-').join(', '), zegGoed: hoorbaar,
+        zegFout: () => 'Je hakt dit woord zo: ' + hoorbaar
+      };
+    }
+  },
+
+  zoek: {
+    groep:'woord', naam:'Zoek het woord', icoon:'🔍',
+    tip:'Vind het woord tussen de bijna-gelijke',
+    uitleg:'<b>Zoek het woord.</b> Alle woorden lijken op elkaar. Alleen wie precies kijkt, vindt het juiste. Dit traint nauwkeurig lezen in plaats van gokken op de eerste letters.',
+    maak(){
+      const w = heel(trek('woord', WOORDEN));
+      return {
+        toonWoord: w, opdracht:'Klik hieronder op hetzelfde woord.',
+        spreekOpdracht:'Klik hieronder op hetzelfde woord.',
+        opties: shuffle([w, ...kiesN(varianten(w),5)]),
+        juist: w, sleutelVraag: w,
+        zegKort: w, zegGoed: w,
+        zegFout: g => 'Jij koos ' + g + '. Het woord was ' + w + '.'
+      };
+    }
+  },
+
+  /* ---------------- ZINSNIVEAU ---------------- */
+
+  gatenzin: {
+    groep:'zin', naam:'Welk woord past?', icoon:'🧩',
+    tip:'Vul het ontbrekende woord in de zin aan',
+    uitleg:'<b>Welk woord past?</b> De vier woorden lijken op elkaar. Lees de hele zin eerst, dan weet je welk woord erin hoort.',
+    maak(){
+      const [voor, juist, na, fout] = trek('gaten', GATEN);
+      const volle = (voor + ' ' + juist + ' ' + na).replace(/\s+/g,' ').replace(/ \./,'.').trim();
+      return {
+        zinGat: [voor, na],
+        opdracht:'Welk woord past in de zin?',
+        spreekOpdracht:'Lees de zin. Welk woord past?',
+        opties: shuffle([juist, ...fout]),
+        juist, sleutelVraag: (voor + ' ___ ' + na).replace(/\s+/g,' ').trim(),
+        zegKort: juist, zegGoed: volle,
+        zegFout: g => 'Niet ' + g + ', maar ' + juist + '. De zin wordt: ' + volle
+      };
+    }
+  },
+
+  kloptzin: {
+    groep:'zin', naam:'Klopt deze zin?', icoon:'🤔',
+    tip:'Lees de zin en beslis: juist of fout',
+    uitleg:'<b>Klopt deze zin?</b> Lees de hele zin, niet alleen het begin. Soms staat er iets wat niet kan.',
+    maak(){
+      const [zin, klopt] = trek('klopt', KLOPT);
+      const oordeel = klopt ? 'Die zin klopt.' : 'Die zin klopt niet.';
+      return {
+        zinVol: zin,
+        opdracht:'Klopt deze zin?',
+        spreekOpdracht:'Lees de zin zelf. Klopt die?',
+        opties: ['✓ Dat klopt','✗ Dat klopt niet'],
+        juist: klopt ? '✓ Dat klopt' : '✗ Dat klopt niet',
+        sleutelVraag: zin,
+        zegKort: oordeel, zegGoed: zin + ' ' + oordeel,
+        zegFout: () => 'Luister nog eens. ' + zin + ' ' + oordeel
+      };
+    }
+  },
+
+  flitszin: {
+    groep:'zin', naam:'Flitszinnen', icoon:'💨',
+    tip:'De zin verschijnt even. Welk woord stond erin?',
+    uitleg:'<b>Flitszinnen.</b> De hele zin is even zichtbaar. Lees ze in één keer. Daarna vraagt de app welk woord erin stond.',
+    maak(){
+      const [voor, juist, na, fout] = trek('gaten', GATEN);
+      const zin = (voor + ' ' + juist + ' ' + na).replace(/\s+/g,' ').replace(/ \./,'.').trim();
+      return {
+        flitsZin: zin, flitsTijd: TEMPO_ZIN[tempoIdx][1],
+        opdracht:'Lees de zin...', naOpdracht:'Welk woord stond in de zin?',
+        spreekOpdracht:'Lees de zin in één keer.',
+        opties: shuffle([juist, ...fout]),
+        juist, sleutelVraag: zin,
+        zegKort: juist, zegGoed: zin,
+        zegFout: g => 'Er stond niet ' + g + '. De zin was: ' + zin
+      };
+    }
+  }
+};
+
+/* =====================================================================
+   CORRECTIESLEUTEL
+   ===================================================================== */
+
+const sleutel = [];   // {blok, vraag, gekozen, juist, goed, meteen}
+
+function naarSleutel(rij){ sleutel.push(rij); }
+
+function tekenSleutel(){
+  el('sleuteldatum').textContent = new Date().toLocaleString('nl-BE',
+    {weekday:'long', day:'numeric', month:'long', hour:'2-digit', minute:'2-digit'});
+  if(!sleutel.length){
+    el('sleutelinhoud').innerHTML = '<p style="color:#6b7280">Nog niets geoefend deze sessie.</p>';
+    return;
+  }
+  const perBlok = {};
+  sleutel.forEach(r=>{ (perBlok[r.blok] = perBlok[r.blok] || []).push(r); });
+  el('sleutelinhoud').innerHTML = Object.entries(perBlok).map(([naam, rijen])=>{
+    const goed = rijen.filter(r=>r.goed).length;
+    const meteen = rijen.filter(r=>r.meteen).length;
+    return `<h2 class="groepkop" style="margin-top:22px">${naam}</h2>
+      <p style="margin:0 0 8px;color:#6b7280;font-size:15px">
+        ${goed} van de ${rijen.length} juist — ${meteen} meteen juist bij de eerste poging</p>
+      ${tabel(rijen)}`;
+  }).join('');
+}
+
+/* Elke regel krijgt een luisterknop; bij een fout is die groot en gekleurd,
+   zodat hij zijn fouten achteraf kan beluisteren zonder te moeten lezen. */
+const teZeggen = [];
+function rijenHtml(rijen){
+  return '<tr><th style="width:30px"></th><th>Opdracht</th>' +
+    '<th>Jouw antwoord</th><th>Juist</th><th style="width:46px"></th></tr>' +
+    rijen.map(r=>{
+      const i = teZeggen.push(r.zeg || r.juist) - 1;
+      return `<tr>
+      <td class="merk ${r.goed?'j':'f'}">${r.goed?'✓':'✗'}</td>
+      <td class="v">${r.vraag}</td>
+      <td class="v ${r.goed?'':'was'}">${r.gekozen}</td>
+      <td class="v ${r.goed?'':'moest'}">${r.juist}</td>
+      <td><button class="hoor ${r.goed?'':'nodig'}" data-z="${i}" title="Luister">🔊</button></td>
+    </tr>`;}).join('');
+}
+function tabel(rijen){ return '<table class="nk">' + rijenHtml(rijen) + '</table>'; }
+
+/* één klikafhandelaar voor alle luisterknoppen, ook de later bijgetekende */
+document.addEventListener('click', e=>{
+  const k = e.target.closest('.hoor');
+  if(k) zeg(teZeggen[+k.dataset.z], true);
+});
+
+/* =====================================================================
+   MOTOR
+   ===================================================================== */
+
+const AANTAL = 12;
+let huidig=null, index=0, goed=0, meteenGoed=0, geprobeerd=false, vraag=null, rondeRijen=[];
+let opdrachtTimer = null;
+
+function toon(welk){
+  ['menu','oefening','hardop','einde','sleutel'].forEach(id=>
+    el(id).classList.toggle('hide', id!==welk));
+}
+
+function bouwMenu(){
+  ['woord','zin'].forEach(g=>{
+    el('tiles-'+g).innerHTML = Object.entries(BLOKKEN).filter(([,b])=>b.groep===g)
+      .map(([k,b])=>`<button class="tile" data-b="${k}"><span class="ic">${b.icoon}</span>
+        <b>${b.naam}</b><small>${b.tip}</small></button>`).join('');
+  });
+  el('tiles-zin').insertAdjacentHTML('beforeend',
+    `<button class="tile" data-b="hardop"><span class="ic">📖</span><b>Hardop lezen</b>
+     <small>Lees zelf, luister, en beoordeel jezelf</small></button>`);
+  document.querySelectorAll('.tile[data-b]').forEach(t=>{
+    t.onclick = ()=> t.dataset.b === 'hardop' ? startHardop() : start(t.dataset.b);
+  });
+}
+
+function start(k){
+  huidig=k; index=0; goed=0; meteenGoed=0; rondeRijen=[]; legTerug();
+  const b = BLOKKEN[k];
+  el('uitleg').innerHTML = b.uitleg;
+  el('tempoknop').classList.toggle('hide', !(k==='flits'||k==='flitszin'));
+  tekenTempo();
+  el('dots').innerHTML = Array.from({length:AANTAL},()=>'<span class="dot"></span>').join('');
+  toon('oefening');
+  volgende();
+}
+
+function updateDots(){
+  document.querySelectorAll('#dots .dot').forEach((d,i)=>{
+    d.className = 'dot';
+    if(i<index) d.classList.add(rondeRijen[i] && rondeRijen[i].meteen ? 'done' : 'mis');
+    if(i===index) d.classList.add('now');
+  });
+}
+
+function volgende(){
+  if(index>=AANTAL) return eindig();
+  geprobeerd=false;
+  vraag = BLOKKEN[huidig].maak();
+  el('feedback').textContent=''; el('feedback').className='fb';
+  el('opties').innerHTML=''; el('opties').className='opties';
+  el('opdracht').textContent = vraag.opdracht;
+  updateDots();
+
+  if(vraag.flits || vraag.flitsZin){
+    const kort = !!vraag.flits;
+    el('vak').innerHTML = `<div class="${kort?'flits':'flitszin'}" id="flitsvak">${vraag.flits||vraag.flitsZin}</div>`;
+    setTimeout(()=>{
+      const v = el('flitsvak');
+      if(v){ v.textContent=''; v.classList.add('leeg'); }
+      el('opdracht').textContent = vraag.naOpdracht;
+      toonOpties();
+    }, vraag.flitsTijd);
+  }else if(vraag.zinGat){
+    el('vak').innerHTML = `<div class="zin">${vraag.zinGat[0]} <span class="gat"></span> ${vraag.zinGat[1]}</div>`;
+    toonOpties();
+  }else if(vraag.zinVol){
+    el('vak').innerHTML = `<div class="zin">${vraag.zinVol}</div>`;
+    toonOpties();
+  }else{
+    el('vak').innerHTML = `<div class="flits">${vraag.toonWoord}</div>`;
+    toonOpties();
+  }
+  opdrachtTimer = setTimeout(()=>zeg(vraag.spreekOpdracht), 250);
+}
+
+function toonOpties(){
+  const breed = vraag.opties.some(o=>String(o).length>22);
+  el('opties').className = 'opties' + (breed ? ' breed' : '');
+  el('opties').innerHTML = vraag.opties.map((o,i)=>
+    `<button class="opt" data-i="${i}">${o}</button>`).join('');
+  document.querySelectorAll('.opt').forEach(b=> b.onclick = ()=>antwoord(b));
+}
+
+let laatsteCorrectie = '';
+
+function antwoord(knop){
+  // de opdracht mag niet alsnog ingesproken worden over de correctie heen
+  if(opdrachtTimer){ clearTimeout(opdrachtTimer); opdrachtTimer = null; }
+  const gekozen = vraag.opties[+knop.dataset.i];
+  const juist = vraag.juist;
+
+  if(gekozen === juist){
+    // juist: korte bevestiging, meteen door — geen wachttijd
+    knop.classList.add('goed');
+    document.querySelectorAll('.opt').forEach(b=>b.disabled=true);
+    el('feedback').textContent = '✓ Juist!'; el('feedback').className = 'fb goed';
+    zeg(vraag.zegKort || juist);
+    goed++; if(!geprobeerd) meteenGoed++;
+    bewaar(gekozen, true, !geprobeerd, vraag.zegGoed || juist);
+    setTimeout(()=>{ index++; volgende(); }, 1500);
+
+  }else if(!geprobeerd){
+    // eerste fout: nog niets verklappen, enkel terugsturen
+    knop.classList.add('fout'); knop.disabled = true;
+    geprobeerd = true;
+    el('feedback').textContent = 'Nog niet. Kijk nog eens goed.'; el('feedback').className='fb fout';
+    zeg('Nog niet. Kijk nog eens goed.');
+
+  }else{
+    // tweede fout: de app stopt, spreekt de correctie uit en wacht
+    knop.classList.add('fout'); knop.disabled = true;
+    document.querySelectorAll('.opt').forEach(b=>{
+      b.disabled = true;
+      if(vraag.opties[+b.dataset.i] === juist) b.classList.add('goed');
+    });
+    laatsteCorrectie = vraag.zegFout ? vraag.zegFout(gekozen)
+                                     : ('Het juiste antwoord is ' + juist);
+    el('feedback').textContent = ''; el('feedback').className = 'fb';
+    el('corrtekst').textContent = laatsteCorrectie;
+    el('correctievak').classList.remove('hide');
+    zeg(laatsteCorrectie, true);
+    bewaar(gekozen, false, false, laatsteCorrectie);
+    // geen timer: hij luistert zo vaak hij wil en klikt zelf verder
+  }
+}
+
+el('nogeens').onclick = ()=> zeg(laatsteCorrectie, true);
+el('verder').onclick = ()=>{
+  el('correctievak').classList.add('hide');
+  index++; volgende();
+};
+
+function bewaar(gekozen, isGoed, meteen, gesproken){
+  const rij = { blok: BLOKKEN[huidig].naam, vraag: vraag.sleutelVraag,
+                gekozen, juist: vraag.juist, goed: isGoed, meteen,
+                zeg: gesproken || vraag.juist };
+  rondeRijen.push(rij); naarSleutel(rij);
+}
+
+function eindig(){
+  el('eindscore').textContent =
+    meteenGoed + ' van de ' + AANTAL + ' meteen juist' +
+    (goed > meteenGoed ? ' (' + (goed-meteenGoed) + ' na een tweede poging)' : '');
+  el('eindtabel').innerHTML = rijenHtml(rondeRijen);
+  toon('einde');
+  zeg('Klaar. Je had er ' + meteenGoed + ' van de ' + AANTAL + ' meteen juist.');
+}
+
+/* =====================================================================
+   HARDOP LEZEN — zelfcontrole met modelstem
+   ===================================================================== */
+
+let tIdx=0, zIdx=0, hopRijen=[];
+
+function startHardop(){
+  tIdx = rnd(0, TEKSTEN.length-1); zIdx = 0; hopRijen = [];
+  toon('hardop'); tekenHardop();
+}
+
+function tekenHardop(){
+  const t = TEKSTEN[tIdx];
+  if(zIdx >= t.zinnen.length) return eindigHardop();
+  el('hoptitel').textContent = t.titel + ' — zin ' + (zIdx+1) + ' van ' + t.zinnen.length;
+  el('hopzin').textContent = t.zinnen[zIdx];
+  el('dots3').innerHTML = t.zinnen.map((_,i)=>{
+    const r = hopRijen[i];
+    const kl = i<zIdx ? (r && r.goed ? 'done' : 'mis') : (i===zIdx ? 'now' : '');
+    return `<span class="dot ${kl}"></span>`;
+  }).join('');
+}
+
+function markeer(vlot){
+  const t = TEKSTEN[tIdx], zin = t.zinnen[zIdx];
+  const rij = { blok:'Hardop lezen — ' + t.titel, vraag: zin,
+                gekozen: vlot ? 'ging vlot' : 'was moeilijk',
+                juist: vlot ? 'ging vlot' : 'nog eens oefenen',
+                goed: vlot, meteen: vlot, zeg: zin };
+  hopRijen[zIdx] = rij; naarSleutel(rij);
+  zIdx++; tekenHardop();
+}
+
+function eindigHardop(){
+  const vlot = hopRijen.filter(r=>r && r.goed).length;
+  el('eindscore').textContent = vlot + ' van de ' + hopRijen.length + ' zinnen gingen vlot';
+  el('eindtabel').innerHTML = rijenHtml(hopRijen.filter(Boolean));
+  huidig = null;
+  toon('einde');
+}
+
+el('hopluister').onclick = ()=> zeg(TEKSTEN[tIdx].zinnen[zIdx], true);
+el('hopvlot').onclick = ()=> markeer(true);
+el('hopmoeilijk').onclick = ()=> markeer(false);
+el('anderetekst').onclick = ()=>{
+  tIdx = (tIdx+1) % TEKSTEN.length; zIdx = 0; hopRijen = []; tekenHardop();
+};
+
+/* ---------- navigatie ---------- */
+el('luisterknop').onclick = ()=> vraag && zeg(vraag.spreekOpdracht);
+el('terug').onclick  = ()=>{ if(heeftSpraak) speechSynthesis.cancel(); toon('menu'); };
+el('terug2').onclick = ()=> toon('menu');
+el('terug3').onclick = ()=>{ if(heeftSpraak) speechSynthesis.cancel(); toon('menu'); };
+el('terug4').onclick = ()=> toon('menu');
+el('naarmenu2').onclick = ()=> toon('menu');
+el('opnieuw').onclick = ()=> huidig ? start(huidig) : startHardop();
+el('naarsleutel').onclick = ()=>{ tekenSleutel(); toon('sleutel'); };
+el('printknop').onclick = ()=> window.print();
+el('wisknop').onclick = ()=>{ sleutel.length = 0; tekenSleutel(); };
+
+/* alle fouten van de ronde (of van de hele sessie) na elkaar beluisteren */
+function hoorFouten(rijen){
+  const fout = rijen.filter(r=>r && !r.goed);
+  if(!fout.length){ zeg('Je had geen fouten. Goed gewerkt.'); return; }
+  zeg('Je had ' + fout.length + (fout.length===1?' fout.':' fouten.'));
+  // na elkaar inplannen: speechSynthesis zet ze zelf in de wachtrij
+  fout.forEach(r => zegErbij(r.zeg || r.juist));
+}
+/* zeg() wist de wachtrij — dit voegt juist toe aan de wachtrij */
+function zegErbij(t){
+  if(!heeftSpraak || !t) return;
+  try{
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang='nl-BE'; u.rate=.75;
+    if(stem) u.voice = stem;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+el('hoorfouten').onclick  = ()=> hoorFouten(huidig ? rondeRijen : hopRijen);
+el('hoorfouten2').onclick = ()=> hoorFouten(sleutel);
+
+bouwMenu();
+</script>
+</body>
+</html>
