@@ -1,5 +1,48 @@
 <!DOCTYPE html>
-<html lang="nl"><head><meta charset="utf-8">
-<meta http-equiv="refresh" content="0; url=KLSCflitskaarten/">
-<title>Kathy LSC</title></head>
-<body><p><a href="KLSCflitskaarten/">Naar KLSCflitskaarten</a></p></body></html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kathy LSC — leesmateriaal</title>
+<style>
+  :root{ --bg:#f4f1ea; --card:#fff; --ink:#22262e; --muted:#6b7280;
+         --line:#ddd8cc; --accent:#3d6b8f; }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif; font-size:18px; line-height:1.6}
+  .wrap{max-width:720px; margin:0 auto; padding:34px 18px 60px}
+  h1{font-size:28px; margin:0 0 4px}
+  .sub{color:var(--muted); font-size:15px; margin:0 0 26px}
+  .lijst{display:grid; gap:14px}
+  a.tool{display:block; background:var(--card); border:2px solid var(--line);
+    border-radius:14px; padding:20px 18px; text-decoration:none; color:inherit;
+    box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  a.tool:hover{border-color:var(--accent)}
+  a.tool .ic{font-size:34px; line-height:1; display:block; margin-bottom:6px}
+  a.tool b{font-size:20px; display:block}
+  a.tool small{color:var(--muted); font-size:14px}
+  footer{margin-top:34px; color:var(--muted); font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Leesmateriaal</h1>
+  <p class="sub">Oefentools voor leerlingen. Klik op een tool om te starten.</p>
+
+  <div class="lijst">
+    <a class="tool" href="KLSCflitskaarten/">
+      <span class="ic">🗂️</span>
+      <b>Flitskaarten</b>
+      <small>Leesmateriaal en afdrukbladen</small>
+    </a>
+    <a class="tool" href="KLSCtechnischlezen/">
+      <span class="ic">📖</span>
+      <b>Technisch lezen</b>
+      <small>Woorden en zinnen oefenen, met gesproken correctiesleutel</small>
+    </a>
+  </div>
+
+  <footer>Werkt op computer, chromebook en tablet. Geen installatie nodig.</footer>
+</div>
+</body>
+</html>
